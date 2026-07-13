@@ -170,30 +170,60 @@
   .file-status strong { font-variant-numeric: tabular-nums; }
   .file-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
   .file-actions button { min-height: 40px; }
+  .settings-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: var(--space-3); }
+  .settings-header-row h3 { margin-bottom: 0; }
+  .settings-header-actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+  #versionInfo { text-align: center; }
+  #settingsDialog { max-width: 820px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+  #settingsDialog:not([open]) { display: none; }
+  #settingsDialog > *:not(.settings-section) { flex: 0 0 auto; }
+  .settings-section { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-bottom: var(--space-4); padding-inline-end: 6px; }
+  .settings-section[hidden] { display: none; }
+  .settings-tabs { margin-bottom: 16px; }
+  .settings-tabs .tab { padding: 8px 12px; font-size: 14px; min-height: 40px; }
   .help-body { font-size: 14px; line-height: 1.75; max-height: 60vh; overflow-y: auto; padding-inline-end: 6px; }
   .help-section { margin-bottom: 18px; }
   .help-section h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--color-fg); }
   .help-body p { color: var(--color-text-dim); }
 
-  /* Print-only elements (hidden on screen) */
-  .print-only { display: none; }
-  #printHeader { align-items: center; gap: 16px; margin-bottom: 20px; }
-  #printHeader .ph-title { font-size: 22px; font-weight: 700; }
-  #printHeader .ph-date { font-size: 14px; color: #555; }
+  /* Report Center */
+  .report-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 14px; }
+  .report-controls label { flex: 1 1 140px; }
+  .report-controls .btn-primary { min-height: 44px; }
+  .quick-period-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .qp-btn { background: var(--color-muted); border: none; border-radius: 999px; padding: 5px 14px; font-size: 13px; color: var(--color-fg); }
+  .qp-btn:hover { background: var(--color-secondary); color: #fff; }
+  .qp-btn.qp-year { background: var(--color-secondary); color: #fff; font-weight: 600; }
+  .qp-btn.qp-year:hover { filter: brightness(1.15); }
+  .report-preview { max-height: 60vh; overflow: auto; border: 1px solid var(--color-border); border-radius: 8px; padding: 16px; background: var(--color-muted); }
+  #reportPrintArea { display: none; }
+
+  .rpt { background: #fff; color: #111827; padding: 24px; border-radius: 6px; }
+  .rpt-title-band { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #1E40AF; padding-bottom: 12px; margin-bottom: 12px; }
+  .rpt-title-band .rt-name { font-size: 22px; font-weight: 700; color: #0F172A; }
+  .rpt-title-band .rt-sub { font-size: 13px; color: #6B7280; }
+  .rpt-params { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 13px; color: #374151; margin-bottom: 14px; }
+  .rpt-params strong { color: #111827; }
+  .rpt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rpt-table th { background: #1E40AF; color: #fff; text-align: start; padding: 7px 9px; font-weight: 600; }
+  .rpt-table td { padding: 6px 9px; border-bottom: 1px solid #E5E7EB; text-align: start; }
+  .rpt-table td.num { text-align: end; font-variant-numeric: tabular-nums; }
+  .rpt-group td { background: #EEF2FF; font-weight: 700; color: #1E3A8A; border-top: 1px solid #C7D2FE; }
+  .rpt-subtotal td { background: #F8FAFC; font-weight: 600; border-top: 1px solid #CBD5E1; }
+  .rpt-grand td { background: #1E40AF; color: #fff; font-weight: 700; font-size: 14px; }
+  .rpt-summary { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: 14px; border-top: 2px solid #1E40AF; padding-top: 12px; }
+  .rpt-summary b { color: #1E40AF; font-size: 16px; }
+  .rpt-empty { padding: 24px; text-align: center; color: #6B7280; }
+
+  .overdue-cell { color: #F87171; font-weight: 600; }
+  [data-theme="light"] .overdue-cell { color: #DC2626; }
+
   @media print {
     @page { margin: 1.2cm; }
     html, body { background: #fff !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    header, #toast, dialog, .header-actions, .add-form, form, .actions-cell, .file-hint, .empty, .proj-strip, .tabs { display: none !important; }
-    .container { max-width: 100% !important; padding: 0 !important; }
-    .print-only { display: flex !important; }
-    .tab-panel[hidden] { display: block !important; }
-    .panel, .card { background: #fff !important; color: #000 !important; border: 1px solid #bbb !important; box-shadow: none !important; break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; }
-    h2, .cat-label, .sub, th, td, .amount { color: #000 !important; }
-    .amount-in, .card.total .amount { color: #067647 !important; }
-    .amount-out, .amount.neg { color: #b42318 !important; }
-    .table-wrap { overflow: visible !important; }
-    table { width: 100% !important; }
-    tr { page-break-inside: avoid; }
+    body.report-printing .container, body.report-printing dialog, body.report-printing #toast { display: none !important; }
+    body.report-printing #reportPrintArea { display: block !important; }
+    #reportPrintArea .rpt-table { font-size: 11px !important; }
   }
 
   @media (max-width: 600px) {
@@ -213,7 +243,7 @@
       <button type="button" class="icon-btn" id="backupClock" data-i18n-aria="header.backupClockTitle" aria-label="זמן מאז הגיבוי האחרון — פתיחת הגדרות גיבוי">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       </button>
-      <button type="button" class="icon-btn" id="printBtn" data-i18n-aria="header.printBtn" aria-label="הדפסה">
+      <button type="button" class="icon-btn" id="printBtn" data-i18n-aria="header.reportCenter" aria-label="מרכז הדוחות">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       </button>
       <button type="button" class="icon-btn" id="settingsBtn" data-i18n-aria="header.settingsBtn" aria-label="הגדרות">
@@ -242,13 +272,6 @@
       </a>
     </div>
   </header>
-
-  <div id="printHeader" class="print-only">
-    <div>
-      <div class="ph-title" data-i18n="app.title">נועם — ניהול פרויקטים</div>
-      <div class="ph-date" id="printDate"></div>
-    </div>
-  </div>
 
   <section class="panel" style="margin-bottom:16px">
     <div class="proj-strip" id="projSwitcherStrip"></div>
@@ -329,7 +352,7 @@
         <label><span data-i18n="field.project">פרויקט</span> <select data-f="project" class="proj-select"></select></label>
         <label><span data-i18n="field.assignee">אחראי</span> <input type="text" data-f="assignee"></label>
         <label><span data-i18n="field.dueDate">תאריך יעד</span> <input type="date" data-f="dueDate"></label>
-        <label><span data-i18n="field.priority">עדיפות</span>
+        <label><span data-i18n="field.priority">דחיפות</span>
           <select data-f="priority">
             <option value="normal" data-i18n="enum.priority.normal">רגילה</option>
             <option value="urgent" data-i18n="enum.priority.urgent">דחוף</option>
@@ -355,7 +378,7 @@
           <th data-i18n="field.project">פרויקט</th>
           <th data-i18n="field.assignee">אחראי</th>
           <th data-i18n="field.dueDate">יעד</th>
-          <th data-i18n="field.priority">עדיפות</th>
+          <th data-i18n="field.priority">דחיפות</th>
           <th data-i18n="field.status">סטטוס</th>
           <th data-i18n="tasks.subtasksCol">תת-משימות</th>
           <th data-i18n="common.actions">פעולות</th>
@@ -425,29 +448,42 @@
 </div>
 
 <dialog id="settingsDialog">
-  <h3 data-i18n="settings.title">הגדרות</h3>
-  <div class="file-status" id="fileStatus"></div>
-  <div class="file-actions">
-    <button type="button" class="btn-edit" id="exportBtn" data-i18n="data.exportBtn">ייצוא לאקסל</button>
-    <button type="button" class="btn-edit" id="importBtn" data-i18n="data.importBtn">ייבוא מאקסל</button>
-    <button type="button" class="btn-danger" id="deleteAllBtn" data-i18n="data.deleteAllBtn">מחיקת כל הנתונים</button>
+  <div class="settings-header-row">
+    <h3 data-i18n="settings.title">הגדרות</h3>
+    <div class="settings-header-actions">
+      <button type="button" class="btn-ghost" id="checkVersionBtn" data-i18n="settings.data.checkVersionBtn">רענן את הדפדפן</button>
+      <button type="button" class="btn-ghost" id="closeSettings" data-i18n="common.close">סגור</button>
+    </div>
   </div>
-  <p class="file-hint" style="margin-top:8px" data-i18n="data.hint">הנתונים נשמרים בדפדפן הזה בלבד. מומלץ לייצא גיבוי לאקסל מדי פעם.</p>
-  <h4 style="margin-top:16px" data-i18n="settings.backupReminder.heading">תזכורת גיבוי</h4>
-  <p class="file-hint" data-i18n="settings.backupReminder.hint">כשעובר הזמן שבחרתם בלי ייצוא לאקסל, נועם יזכיר לכם עם חלון קופץ. בדפדפנים מסוימים (למשל Safari באייפון) המידע המקומי עלול להימחק אחרי שבוע בלי שימוש, אלא אם שומרים קיצור דרך למסך הבית.</p>
-  <label><span data-i18n="settings.backupReminder.label">תדירות התזכורת</span>
-    <select id="backupReminderInterval">
-      <option value="5" data-i18n="settings.backupReminder.every5">כל 5 דקות</option>
-      <option value="10" data-i18n="settings.backupReminder.every10">כל 10 דקות</option>
-      <option value="15" data-i18n="settings.backupReminder.every15">כל 15 דקות</option>
-      <option value="30" data-i18n="settings.backupReminder.every30">כל 30 דקות</option>
-      <option value="60" data-i18n="settings.backupReminder.every60">כל שעה</option>
-      <option value="off" data-i18n="settings.backupReminder.off">בלי תזכורת</option>
-    </select>
-  </label>
-  <div class="dialog-actions">
-    <button type="button" class="btn-ghost" id="closeSettings" data-i18n="common.close">סגור</button>
+
+  <div class="tabs settings-tabs" id="settingsTabs">
+    <button type="button" class="tab active" data-stab="data" data-i18n="settings.tabs.data">נתונים מקומיים</button>
+    <button type="button" class="tab" data-stab="backup" data-i18n="settings.tabs.backup">תזכורת גיבוי</button>
   </div>
+
+  <section class="settings-section" id="settingsDataSection" data-stab="data">
+    <div class="file-status" id="fileStatus"></div>
+    <div class="file-actions">
+      <button type="button" class="btn-edit" id="exportBtn" data-i18n="data.exportBtn">ייצוא לאקסל</button>
+      <button type="button" class="btn-edit" id="importBtn" data-i18n="data.importBtn">ייבוא מאקסל</button>
+      <button type="button" class="btn-danger" id="deleteAllBtn" data-i18n="data.deleteAllBtn">מחיקת כל הנתונים</button>
+    </div>
+    <p class="file-hint" style="margin-top:8px" data-i18n="data.hint">הנתונים נשמרים בדפדפן הזה בלבד. מומלץ לייצא גיבוי לאקסל מדי פעם.</p>
+  </section>
+
+  <section class="settings-section" id="settingsBackupSection" data-stab="backup" hidden>
+    <p class="file-hint" data-i18n="settings.backupReminder.hint">כשעובר הזמן שבחרתם בלי ייצוא לאקסל, נועם יזכיר לכם עם חלון קופץ. בדפדפנים מסוימים (למשל Safari באייפון) המידע המקומי עלול להימחק אחרי שבוע בלי שימוש, אלא אם שומרים קיצור דרך למסך הבית.</p>
+    <label><span data-i18n="settings.backupReminder.label">תדירות התזכורת</span>
+      <select id="backupReminderInterval">
+        <option value="5" data-i18n="settings.backupReminder.every5">כל 5 דקות</option>
+        <option value="10" data-i18n="settings.backupReminder.every10">כל 10 דקות</option>
+        <option value="15" data-i18n="settings.backupReminder.every15">כל 15 דקות</option>
+        <option value="30" data-i18n="settings.backupReminder.every30">כל 30 דקות</option>
+        <option value="60" data-i18n="settings.backupReminder.every60">כל שעה</option>
+        <option value="off" data-i18n="settings.backupReminder.off">בלי תזכורת</option>
+      </select>
+    </label>
+  </section>
 </dialog>
 
 <dialog id="backupReminderDialog">
@@ -461,7 +497,13 @@
 </dialog>
 
 <dialog id="helpDialog">
-  <h3 data-i18n="help.title">עזרה</h3>
+  <div class="settings-header-row">
+    <h3 data-i18n="help.title">עזרה</h3>
+    <div class="settings-header-actions">
+      <button type="button" class="btn-ghost" id="checkUpdateBtn" data-i18n="help.checkUpdateBtn">בדיקת עדכונים</button>
+      <span class="file-hint" id="versionInfo"></span>
+    </div>
+  </div>
   <div class="help-body">
     <div class="help-section">
       <h4 data-i18n="help.whatTitle">מה זה נועם?</h4>
@@ -473,7 +515,7 @@
     </div>
     <div class="help-section">
       <h4 data-i18n="help.tasksTitle">משימות ותת-משימות</h4>
-      <p data-i18n="help.tasksBody">לכל משימה אפשר לשייך פרויקט, אחראי, תאריך יעד, עדיפות וסטטוס. לחיצה על כפתור תת-המשימות בטבלה פותחת רשימת צ'קליסט קטנה בתוך המשימה.</p>
+      <p data-i18n="help.tasksBody">לכל משימה אפשר לשייך פרויקט, אחראי, תאריך יעד, דחיפות וסטטוס. לחיצה על כפתור תת-המשימות בטבלה פותחת רשימת צ'קליסט קטנה בתוך המשימה.</p>
     </div>
     <div class="help-section">
       <h4 data-i18n="help.expensesTitle">הוצאות</h4>
@@ -515,9 +557,33 @@
   </div>
 </dialog>
 
+<dialog id="reportDialog">
+  <h3 id="reportTitle" data-i18n="report.title">מרכז הדוחות</h3>
+  <div class="report-controls">
+    <label><span data-i18n="report.label">דוח</span> <select id="reportSelect"></select></label>
+    <span id="reportDateFilters">
+      <label><span data-i18n="field.dateFrom">מתאריך</span> <input type="date" id="reportFrom" lang="he-IL"></label>
+      <label><span data-i18n="field.dateTo">עד תאריך</span> <input type="date" id="reportTo" lang="he-IL"></label>
+      <label><span data-i18n="report.groupLabel">קיבוץ לפי</span> <select id="reportGroup"></select></label>
+    </span>
+    <button type="button" class="btn-primary" id="reportGenerate" data-i18n="report.generateBtn">הפק דוח</button>
+  </div>
+  <div class="quick-period-row" id="reportQuickPeriods"></div>
+  <div class="dialog-actions">
+    <button type="button" class="btn-edit" id="reportPrint" data-i18n="report.printBtn">הדפסה / PDF</button>
+    <button type="button" class="btn-edit" id="reportExport" data-i18n="report.exportBtn">ייצוא לאקסל</button>
+    <button type="button" class="btn-ghost" id="closeReport" data-i18n="common.close">סגור</button>
+  </div>
+  <div id="reportPreview" class="report-preview"><p class="file-hint" data-i18n="report.chooseHint">בחרו דוח ולחצו "הפק דוח".</p></div>
+</dialog>
+
+<div id="reportPrintArea"></div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
+const APP_VERSION = '1.0.0';
+const APP_BUILT_AT = 'dev'; // bumped by hand alongside version.json on each deploy that should force a reload
 const LANG_ORDER = ['he', 'en', 'ru', 'ar'];
 const RTL_LANGS = ['he', 'ar'];
 const MONTH_NAMES = {
@@ -530,7 +596,7 @@ const I18N = {
   'app.title': { he: 'נועם — ניהול פרויקטים', en: 'Noam — Project Management', ru: 'Ноам — Управление проектами', ar: 'نوعام — إدارة المشاريع' },
   'header.themeToggle': { he: 'החלפת עיצוב כהה / בהיר', en: 'Toggle dark / light theme', ru: 'Переключить тёмную / светлую тему', ar: 'تبديل الوضع الداكن / الفاتح' },
   'lang.toggleAria': { he: 'שינוי שפה / Change language / Изменить язык', en: 'Change language', ru: 'Изменить язык', ar: 'تغيير اللغة' },
-  'header.printBtn': { he: 'הדפסה', en: 'Print', ru: 'Печать', ar: 'طباعة' },
+  'header.reportCenter': { he: 'מרכז הדוחות', en: 'Report Center', ru: 'Центр отчётов', ar: 'مركز التقارير' },
   'header.settingsBtn': { he: 'הגדרות', en: 'Settings', ru: 'Настройки', ar: 'الإعدادات' },
   'header.helpBtn': { he: 'עזרה', en: 'Help', ru: 'Справка', ar: 'مساعدة' },
   'header.rlappBtn': { he: 'כל השירותים שלנו — RLAPP', en: 'All our services — RLAPP', ru: 'Все наши сервисы — RLAPP', ar: 'كل خدماتنا — RLAPP' },
@@ -555,7 +621,10 @@ const I18N = {
   'field.project': { he: 'פרויקט', en: 'Project', ru: 'Проект', ar: 'المشروع' },
   'field.noProjectOpt': { he: '— ללא —', en: '— None —', ru: '— Нет —', ar: '— بدون —' },
   'field.assignee': { he: 'אחראי', en: 'Assignee', ru: 'Ответственный', ar: 'المسؤول' },
-  'field.priority': { he: 'עדיפות', en: 'Priority', ru: 'Приоритет', ar: 'الأولوية' },
+  'field.priority': { he: 'דחיפות', en: 'Priority', ru: 'Приоритет', ar: 'الأولوية' },
+  'field.month': { he: 'חודש', en: 'Month', ru: 'Месяц', ar: 'شهر' },
+  'field.dateFrom': { he: 'מתאריך', en: 'From date', ru: 'С даты', ar: 'من تاريخ' },
+  'field.dateTo': { he: 'עד תאריך', en: 'To date', ru: 'По дату', ar: 'إلى تاريخ' },
   'field.notes': { he: 'הערות', en: 'Notes', ru: 'Примечания', ar: 'ملاحظات' },
   'field.date': { he: 'תאריך', en: 'Date', ru: 'Дата', ar: 'التاريخ' },
   'field.amount': { he: 'סכום (₪)', en: 'Amount (₪)', ru: 'Сумма (₪)', ar: 'المبلغ (₪)' },
@@ -592,6 +661,8 @@ const I18N = {
   'overview.colSpent': { he: 'הוצא', en: 'Spent', ru: 'Потрачено', ar: 'المصروف' },
   'overview.colRemaining': { he: 'נותר', en: 'Remaining', ru: 'Осталось', ar: 'المتبقي' },
   'overview.colOpenTasks': { he: 'משימות פתוחות', en: 'Open tasks', ru: 'Открытые задачи', ar: 'المهام المفتوحة' },
+  'projects.dateRangeLabel': { he: 'טווח תאריכים', en: 'Date range', ru: 'Период', ar: 'النطاق الزمني' },
+  'projects.overdueTitle': { he: 'באיחור', en: 'Overdue', ru: 'Просрочено', ar: 'متأخر' },
 
   'projects.addLabel': { he: 'הוספת פרויקט', en: 'Add project', ru: 'Добавить проект', ar: 'إضافة مشروع' },
   'projects.listTitle': { he: 'כל הפרויקטים', en: 'All projects', ru: 'Все проекты', ar: 'كل المشاريع' },
@@ -645,6 +716,9 @@ const I18N = {
   'data.fileStatusNever': { he: '{n} רשומות · טרם נשמר', en: '{n} records · never saved', ru: 'Записей: {n} · ещё не сохранено', ar: '{n} سجلات · لم يُحفظ بعد' },
 
   'settings.title': { he: 'הגדרות', en: 'Settings', ru: 'Настройки', ar: 'الإعدادات' },
+  'settings.tabs.data': { he: 'נתונים מקומיים', en: 'Local data', ru: 'Локальные данные', ar: 'بيانات محلية' },
+  'settings.tabs.backup': { he: 'תזכורת גיבוי', en: 'Backup reminder', ru: 'Напоминание о резервной копии', ar: 'تذكير النسخ الاحتياطي' },
+  'settings.data.checkVersionBtn': { he: 'רענן את הדפדפן', en: 'Refresh the browser', ru: 'Обновить браузер', ar: 'تحديث المتصفح' },
   'settings.backupReminder.heading': { he: 'תזכורת גיבוי', en: 'Backup reminder', ru: 'Напоминание о резервной копии', ar: 'تذكير النسخ الاحتياطي' },
   'settings.backupReminder.hint': { he: 'כשעובר הזמן שבחרתם בלי ייצוא לאקסל, נועם יזכיר לכם עם חלון קופץ. בדפדפנים מסוימים (למשל Safari באייפון) המידע המקומי עלול להימחק אחרי שבוע בלי שימוש, אלא אם שומרים קיצור דרך למסך הבית.', en: 'When the time you chose passes without exporting to Excel, Noam reminds you with a popup. Some browsers (e.g. iOS Safari) can delete local data after a week of inactivity unless the app is saved to the home screen.', ru: 'Когда проходит выбранное время без экспорта в Excel, Ноам напомнит вам всплывающим окном. Некоторые браузеры (например, Safari на iPhone) могут удалить локальные данные через неделю бездействия, если приложение не сохранено на главный экран.', ar: 'عندما يمر الوقت الذي اخترتموه دون تصدير إلى إكسل، سيذكركم نوعام بنافذة منبثقة. بعض المتصفحات (مثل Safari على آيفون) قد تحذف البيانات المحلية بعد أسبوع من عدم الاستخدام، ما لم يُحفظ التطبيق على الشاشة الرئيسية.' },
   'settings.backupReminder.label': { he: 'תדירות התזכורת', en: 'Reminder frequency', ru: 'Частота напоминаний', ar: 'وتيرة التذكير' },
@@ -659,18 +733,50 @@ const I18N = {
   'backup.reminderFrequencyHint': { he: 'אפשר לשנות את תדירות התזכורת הזו בכל עת דרך חלון ההגדרות.', en: 'You can change this reminder\'s frequency any time from the settings window.', ru: 'Вы можете изменить частоту этого напоминания в любое время в окне настроек.', ar: 'يمكنكم تغيير وتيرة هذا التذكير في أي وقت من نافذة الإعدادات.' },
 
   'help.title': { he: 'עזרה', en: 'Help', ru: 'Справка', ar: 'مساعدة' },
+  'help.checkUpdateBtn': { he: 'בדיקת עדכונים', en: 'Check for updates', ru: 'Проверить обновления', ar: 'التحقق من التحديثات' },
+  'help.versionLabel': { he: 'גרסה {v}', en: 'Version {v}', ru: 'Версия {v}', ar: 'الإصدار {v}' },
   'help.whatTitle': { he: 'מה זה נועם?', en: 'What is Noam?', ru: 'Что такое Ноам?', ar: 'ما هو نوعام؟' },
   'help.whatBody': { he: 'נועם הוא כלי לניהול פרויקטים — פרויקטים, משימות עם תת-משימות, הוצאות ואנשי קשר, הכל במקום אחד, ללא צורך בהתחברות או חשבון.', en: 'Noam is a project management tool - projects, tasks with subtasks, expenses and contacts, all in one place, no sign-in or account needed.', ru: 'Ноам — инструмент управления проектами: проекты, задачи с подзадачами, расходы и контакты — всё в одном месте, без входа в систему и без аккаунта.', ar: 'نوعام هو أداة لإدارة المشاريع — مشاريع ومهام مع مهام فرعية ومصروفات وجهات اتصال، كل ذلك في مكان واحد، دون الحاجة لتسجيل الدخول أو حساب.' },
   'help.projectsTitle': { he: 'פרויקטים', en: 'Projects', ru: 'Проекты', ar: 'المشاريع' },
   'help.projectsBody': { he: 'כל פרויקט כולל שם, תיאור, סטטוס, תאריכי התחלה/יעד ותקציב. הרצועה למעלה מאפשרת לסנן את המשימות, ההוצאות ואנשי הקשר לפי פרויקט נבחר בלחיצה על השבב שלו.', en: 'Each project has a name, description, status, start/due dates and budget. The strip at the top lets you filter tasks, expenses and contacts to a selected project by clicking its chip.', ru: 'У каждого проекта есть название, описание, статус, даты начала/окончания и бюджет. Полоса вверху позволяет фильтровать задачи, расходы и контакты по выбранному проекту, нажав на его чип.', ar: 'يحتوي كل مشروع على اسم ووصف وحالة وتواريخ بدء/استحقاق وميزانية. يتيح لكم الشريط أعلاه تصفية المهام والمصروفات وجهات الاتصال حسب مشروع محدد بالنقر على شريحته.' },
   'help.tasksTitle': { he: 'משימות ותת-משימות', en: 'Tasks and subtasks', ru: 'Задачи и подзадачи', ar: 'المهام والمهام الفرعية' },
-  'help.tasksBody': { he: 'לכל משימה אפשר לשייך פרויקט, אחראי, תאריך יעד, עדיפות וסטטוס. לחיצה על כפתור תת-המשימות בטבלה פותחת רשימת צ\'קליסט קטנה בתוך המשימה.', en: 'Each task can be linked to a project, an assignee, a due date, priority and status. Clicking the subtasks button in the table opens a small checklist inside the task.', ru: 'Каждую задачу можно связать с проектом, ответственным, сроком, приоритетом и статусом. Нажатие кнопки подзадач в таблице открывает небольшой чек-лист внутри задачи.', ar: 'يمكن ربط كل مهمة بمشروع ومسؤول وتاريخ استحقاق وأولوية وحالة. النقر على زر المهام الفرعية في الجدول يفتح قائمة تحقق صغيرة داخل المهمة.' },
+  'help.tasksBody': { he: 'לכל משימה אפשר לשייך פרויקט, אחראי, תאריך יעד, דחיפות וסטטוס. לחיצה על כפתור תת-המשימות בטבלה פותחת רשימת צ\'קליסט קטנה בתוך המשימה.', en: 'Each task can be linked to a project, an assignee, a due date, priority and status. Clicking the subtasks button in the table opens a small checklist inside the task.', ru: 'Каждую задачу можно связать с проектом, ответственным, сроком, приоритетом и статусом. Нажатие кнопки подзадач в таблице открывает небольшой чек-лист внутри задачи.', ar: 'يمكن ربط كل مهمة بمشروع ومسؤول وتاريخ استحقاق وأولوية وحالة. النقر على زر المهام الفرعية في الجدول يفتح قائمة تحقق صغيرة داخل المهمة.' },
   'help.expensesTitle': { he: 'הוצאות', en: 'Expenses', ru: 'Расходы', ar: 'المصروفات' },
   'help.expensesBody': { he: 'הוצאות משויכות לפרויקט מסוימים, וטאב הסקירה מציג לכל פרויקט את התקציב מול הסכום שהוצא והיתרה שנותרה.', en: 'Expenses are linked to a specific project, and the Overview tab shows each project\'s budget versus the amount spent and the remaining balance.', ru: 'Расходы связаны с конкретным проектом, и вкладка «Обзор» показывает бюджет каждого проекта в сравнении с потраченной суммой и оставшимся балансом.', ar: 'ترتبط المصروفات بمشروع معين، وتعرض علامة تبويب النظرة العامة لكل مشروع الميزانية مقابل المبلغ المُنفق والرصيد المتبقي.' },
   'help.contactsTitle': { he: 'אנשי קשר', en: 'Contacts', ru: 'Контакты', ar: 'جهات الاتصال' },
   'help.contactsBody': { he: 'איש קשר יכול להיות משויך לפרויקט אחד, ואם הוא מעורב גם בפרויקט נוסף אפשר להשתמש בכפתור "העתקה לפרויקט אחר" כדי ליצור עבורו רשומה עצמאית נוספת.', en: 'A contact can be linked to one project, and if they\'re also involved in another project you can use the "Copy to another project" button to create an additional independent record for them.', ru: 'Контакт может быть связан с одним проектом, а если он также участвует в другом проекте, можно использовать кнопку «Копировать в другой проект», чтобы создать для него дополнительную независимую запись.', ar: 'يمكن ربط جهة الاتصال بمشروع واحد، وإذا كانت مشاركة أيضاً في مشروع آخر يمكن استخدام زر "نسخ إلى مشروع آخر" لإنشاء سجل مستقل إضافي لها.' },
   'help.dataTitle': { he: 'שמירת נתונים וגיבוי', en: 'Data storage and backup', ru: 'Хранение данных и резервное копирование', ar: 'تخزين البيانات والنسخ الاحتياطي' },
-  'help.dataBody': { he: 'הנתונים נשמרים רק בדפדפן הזה, במכשיר הזה — אין שרת וללא חשבון. אם מנקים היסטוריית גלישה, עוברים למכשיר אחר, או לא פותחים את האתר במשך שבוע ב-Safari באייפון בלי לשמור קיצור דרך למסך הבית — המידע עלול להיעלם. מומלץ לייצא גיבוי לאקסל מדי פעם דרך ההגדרות, ולייבא אותו בחזרה במידת הצורך.', en: 'Data is saved only in this browser, on this device - no server, no account. If you clear browsing data, switch devices, or don\'t open the site for a week on iPhone Safari without saving it to the home screen, the data may be lost. It\'s recommended to export a backup to Excel occasionally via Settings, and import it back if needed.', ru: 'Данные сохраняются только в этом браузере, на этом устройстве — нет сервера, нет аккаунта. Если вы очистите данные браузера, смените устройство или не будете открывать сайт неделю в Safari на iPhone, не сохранив его на главный экран, данные могут быть потеряны. Рекомендуется периодически экспортировать резервную копию в Excel через настройки и импортировать её обратно при необходимости.', ar: 'يتم حفظ البيانات فقط في هذا المتصفح، على هذا الجهاز — لا يوجد خادم ولا حساب. إذا مسحتم بيانات التصفح، أو انتقلتم لجهاز آخر، أو لم تفتحوا الموقع لمدة أسبوع في Safari على آيفون دون حفظه على الشاشة الرئيسية — قد تُفقد البيانات. يُنصح بتصدير نسخة احتياطية إلى إكسل بين الحين والآخر من الإعدادات، واستيرادها مرة أخرى عند الحاجة.' }
+  'help.dataBody': { he: 'הנתונים נשמרים רק בדפדפן הזה, במכשיר הזה — אין שרת וללא חשבון. אם מנקים היסטוריית גלישה, עוברים למכשיר אחר, או לא פותחים את האתר במשך שבוע ב-Safari באייפון בלי לשמור קיצור דרך למסך הבית — המידע עלול להיעלם. מומלץ לייצא גיבוי לאקסל מדי פעם דרך ההגדרות, ולייבא אותו בחזרה במידת הצורך.', en: 'Data is saved only in this browser, on this device - no server, no account. If you clear browsing data, switch devices, or don\'t open the site for a week on iPhone Safari without saving it to the home screen, the data may be lost. It\'s recommended to export a backup to Excel occasionally via Settings, and import it back if needed.', ru: 'Данные сохраняются только в этом браузере, на этом устройстве — нет сервера, нет аккаунта. Если вы очистите данные браузера, смените устройство или не будете открывать сайт неделю в Safari на iPhone, не сохранив его на главный экран, данные могут быть потеряны. Рекомендуется периодически экспортировать резервную копию в Excel через настройки и импортировать её обратно при необходимости.', ar: 'يتم حفظ البيانات فقط في هذا المتصفح، على هذا الجهاز — لا يوجد خادم ولا حساب. إذا مسحتم بيانات التصفح، أو انتقلتم لجهاز آخر، أو لم تفتحوا الموقع لمدة أسبوع في Safari على آيفون دون حفظه على الشاشة الرئيسية — قد تُفقد البيانات. يُنصح بتصدير نسخة احتياطية إلى إكسل بين الحين والآخر من الإعدادات، واستيرادها مرة أخرى عند الحاجة.' },
+
+  'report.title': { he: 'מרכז הדוחות', en: 'Report Center', ru: 'Центр отчётов', ar: 'مركز التقارير' },
+  'report.label': { he: 'דוח', en: 'Report', ru: 'Отчёт', ar: 'تقرير' },
+  'report.projects.title': { he: 'דוח הוצאות פרויקטים', en: 'Project Expense Report', ru: 'Отчёт о расходах по проектам', ar: 'تقرير مصروفات المشاريع' },
+  'report.groupLabel': { he: 'קיבוץ לפי', en: 'Group by', ru: 'Группировать по', ar: 'تجميع حسب' },
+  'report.noGroup': { he: 'ללא קיבוץ', en: 'No grouping', ru: 'Без группировки', ar: 'بدون تجميع' },
+  'report.generateBtn': { he: 'הפק דוח', en: 'Generate report', ru: 'Сформировать отчёт', ar: 'إنشاء تقرير' },
+  'report.chooseHint': { he: 'בחרו דוח ולחצו "הפק דוח".', en: 'Choose a report and click "Generate report".', ru: 'Выберите отчёт и нажмите «Сформировать отчёт».', ar: 'اختاروا تقريراً واضغطوا "إنشاء تقرير".' },
+  'report.printBtn': { he: 'הדפסה / PDF', en: 'Print / PDF', ru: 'Печать / PDF', ar: 'طباعة / PDF' },
+  'report.exportBtn': { he: 'ייצוא לאקסל', en: 'Export to Excel', ru: 'Экспорт в Excel', ar: 'تصدير إلى إكسل' },
+  'report.period': { he: 'תקופה', en: 'Period', ru: 'Период', ar: 'فترة' },
+  'report.wholePeroid': { he: 'כל התקופה', en: 'Whole period', ru: 'Весь период', ar: 'الفترة كاملة' },
+  'report.wholeYearBtn': { he: 'כל שנת {year}', en: 'Whole {year}', ru: 'Весь {year} год', ar: 'كل سنة {year}' },
+  'report.groupByLabel': { he: 'קיבוץ לפי', en: 'Grouped by', ru: 'Группировка по', ar: 'مجمّع حسب' },
+  'report.generatedAt': { he: 'הופק', en: 'Generated', ru: 'Сформировано', ar: 'تم الإنشاء' },
+  'report.recordsLabel': { he: 'רשומות', en: 'Records', ru: 'Записей', ar: 'سجلات' },
+  'report.noDataMsg': { he: 'אין נתונים בתקופה שנבחרה.', en: 'No data in the selected period.', ru: 'Нет данных за выбранный период.', ar: 'لا توجد بيانات في الفترة المختارة.' },
+  'report.groupSubtotal': { he: 'סה"כ {group}', en: 'Total {group}', ru: 'Итого {group}', ar: 'إجمالي {group}' },
+  'report.grandTotal': { he: 'סה"כ כללי', en: 'Grand total', ru: 'Общий итог', ar: 'الإجمالي العام' },
+  'report.recordsCount': { he: 'מספר רשומות', en: 'Number of records', ru: 'Количество записей', ar: 'عدد السجلات' },
+  'report.totalOf': { he: 'סה"כ {label}', en: 'Total {label}', ru: 'Итого {label}', ar: 'إجمالي {label}' },
+  'report.average': { he: 'ממוצע', en: 'Average', ru: 'Среднее', ar: 'متوسط' },
+  'report.notNone': { he: '(ללא)', en: '(none)', ru: '(нет)', ar: '(بدون)' },
+  'report.groupColHeader': { he: 'קבוצה', en: 'Group', ru: 'Группа', ar: 'مجموعة' },
+  'report.sheetName': { he: 'דוח', en: 'Report', ru: 'Отчёт', ar: 'تقرير' },
+  'toast.generateFirst': { he: 'הפיקו דוח קודם', en: 'Generate a report first', ru: 'Сначала сформируйте отчёт', ar: 'أنشئوا تقريراً أولاً' },
+  'toast.clearingCache': { he: 'מנקים נתוני דפדפן ומרעננים...', en: 'Clearing browser data and refreshing...', ru: 'Очистка данных браузера и обновление...', ar: 'جارٍ مسح بيانات المتصفح والتحديث...' },
+  'toast.updateFound': { he: 'נמצאה גרסה חדשה ({v}) — מרעננים...', en: 'New version found ({v}) — refreshing...', ru: 'Найдена новая версия ({v}) — обновление...', ar: 'تم العثور على إصدار جديد ({v}) — جارٍ التحديث...' },
+  'toast.upToDate': { he: 'אתם על הגרסה העדכנית ביותר', en: 'You are on the latest version', ru: 'У вас последняя версия', ar: 'أنتم على أحدث إصدار' },
+  'toast.updateCheckFailed': { he: 'לא ניתן היה לבדוק עדכונים', en: 'Could not check for updates', ru: 'Не удалось проверить обновления', ar: 'تعذّر التحقق من التحديثات' }
 };
 
 let currentLang = localStorage.getItem('noam-lang') || 'he';
@@ -869,6 +975,7 @@ function renderProjectSwitcher() {
 
 function renderOverview() {
   const selectedName = currentFilterProjectName();
+  const selectedProject = projectsFilterId ? projects.find(p => String(p.id) === projectsFilterId) : null;
   const projList = projectsFilterId ? projects.filter(p => String(p.id) === projectsFilterId) : projects;
   const taskList = selectedName ? tasks.filter(x => x.project === selectedName) : tasks;
   const expList = selectedName ? expenses.filter(x => x.project === selectedName) : expenses;
@@ -879,9 +986,17 @@ function renderOverview() {
   const totalSpent = expList.reduce((s, r) => s + (Number(r.amount) || 0), 0);
   const remaining = totalBudget - totalSpent;
 
+  // "Total projects" / "Active projects" only mean something when looking at the
+  // whole set - with one project selected they're always 1/0-or-1, so they're
+  // swapped for that project's own status and date range instead.
+  const leadingCards = selectedProject
+    ? `<div class="card"><span class="cat-label">${t('field.status')}</span><span class="amount"><span class="type-badge ${statusClass('status', selectedProject.status)}">${escapeHtml(enumLabel('status', selectedProject.status))}</span></span></div>
+       <div class="card"><span class="cat-label">${t('projects.dateRangeLabel')}</span><span class="amount" style="font-size:16px">${selectedProject.startDate || selectedProject.dueDate ? `${selectedProject.startDate ? fmtDate(selectedProject.startDate) : '—'} – ${selectedProject.dueDate ? fmtDate(selectedProject.dueDate) : '—'}` : '—'}</span></div>`
+    : `<div class="card"><span class="cat-label">${t('overview.totalProjects')}</span><span class="amount">${projList.length}</span></div>
+       <div class="card"><span class="cat-label">${t('overview.activeProjects')}</span><span class="amount">${activeCount}</span></div>`;
+
   document.getElementById('overviewCards').innerHTML = `
-    <div class="card"><span class="cat-label">${t('overview.totalProjects')}</span><span class="amount">${projList.length}</span></div>
-    <div class="card"><span class="cat-label">${t('overview.activeProjects')}</span><span class="amount">${activeCount}</span></div>
+    ${leadingCards}
     <div class="card"><span class="cat-label">${t('overview.openTasks')}</span><span class="amount">${openTasks}</span></div>
     <div class="card"><span class="cat-label">${t('overview.totalBudget')}</span><span class="amount">${fmt(totalBudget)}</span></div>
     <div class="card"><span class="cat-label">${t('overview.totalSpent')}</span><span class="amount amount-out">${fmt(totalSpent)}</span></div>
@@ -921,6 +1036,9 @@ function renderProjectsTable() {
     </tr>`).join('');
 }
 
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+const isTaskOverdue = task => !!(task.dueDate && task.dueDate < todayISO() && task.status !== 'done');
+
 function renderTasksTable() {
   const selectedName = currentFilterProjectName();
   const rows = [...(selectedName ? tasks.filter(x => x.project === selectedName) : tasks)].sort((a, b) => b.id - a.id);
@@ -928,11 +1046,12 @@ function renderTasksTable() {
   document.getElementById('tasksBody').innerHTML = rows.map(x => {
     const subs = x.subtasks || [];
     const doneCount = subs.filter(s => s.done).length;
+    const overdue = isTaskOverdue(x);
     return `<tr>
       <td>${escapeHtml(x.name)}</td>
       <td>${escapeHtml(x.project || '—')}</td>
       <td>${escapeHtml(x.assignee || '—')}</td>
-      <td>${fmtDate(x.dueDate)}</td>
+      <td class="${overdue ? 'overdue-cell' : ''}" title="${overdue ? t('projects.overdueTitle') : ''}">${fmtDate(x.dueDate)}</td>
       <td><span class="type-badge ${statusClass('priority', x.priority)}">${escapeHtml(enumLabel('priority', x.priority))}</span></td>
       <td><span class="type-badge ${statusClass('taskStatus', x.status)}">${escapeHtml(enumLabel('taskStatus', x.status))}</span></td>
       <td><button type="button" class="btn-ghost subtasks-btn" data-open-subtasks="${x.id}">${subs.length ? `${doneCount}/${subs.length}` : '+'} </button></td>
@@ -1197,6 +1316,189 @@ function importXlsxFromArrayBuffer(buf) {
   renderApp();
 }
 
+// --- Report Center (scoped to project expenses - date / project / description / amount) ---
+const ymKey = dateStr => String(dateStr).slice(0, 7);
+const ymLabel = key => { const [y, m] = key.split('-'); return (MONTH_NAMES[currentLang][Number(m) - 1] || '') + ' ' + y; };
+const REPORTS = {
+  projects: {
+    title: 'report.projects.title', fetch: () => expenses, dateField: 'date',
+    columns: [
+      { f: 'date', label: 'field.date', type: 'date' },
+      { f: 'project', label: 'field.project' },
+      { f: 'description', label: 'field.description' },
+      { f: 'amount', label: 'field.amount', type: 'money', sum: true }
+    ],
+    groups: [{ key: 'project', label: 'field.project' }, { key: 'ym', label: 'field.month' }, { key: '', label: 'report.noGroup' }]
+  }
+};
+let reportHtml = '';
+let lastReport = null;
+
+function reportGroupValue(row, key, cfg) {
+  if (!key) return '';
+  if (key === 'ym') return ymLabel(ymKey(row[cfg.dateField]));
+  const col = cfg.columns.find(c => c.f === key);
+  const v = row[key];
+  if (col && col.map) return (col.map[v] && t(col.map[v])) || v;
+  return v || t('report.notNone');
+}
+function reportCell(row, col) {
+  const v = row[col.f];
+  if (col.type === 'date') return v ? fmtDate(v) : '';
+  if (col.type === 'money') return fmt(v || 0);
+  if (col.map) return escapeHtml((col.map[v] && t(col.map[v])) || v || '');
+  return escapeHtml(v == null ? '' : String(v));
+}
+function fmtSum(c, val) { return c.type === 'money' ? fmt(val) : val; }
+
+function generateReport() {
+  const cfg = REPORTS[document.getElementById('reportSelect').value];
+  const groupKey = document.getElementById('reportGroup').value;
+  const from = document.getElementById('reportFrom').value, to = document.getElementById('reportTo').value;
+  let rows = cfg.fetch();
+  if (from) rows = rows.filter(r => (r[cfg.dateField] || '') >= from);
+  if (to) rows = rows.filter(r => (r[cfg.dateField] || '') <= to);
+  rows.sort((a, b) => {
+    const ga = reportGroupValue(a, groupKey, cfg), gb = reportGroupValue(b, groupKey, cfg);
+    if (ga !== gb) return ga > gb ? 1 : -1;
+    return (a[cfg.dateField] || '') > (b[cfg.dateField] || '') ? 1 : -1;
+  });
+  lastReport = { cfg, rows, groupKey };
+  const sumCols = cfg.columns.filter(c => c.sum);
+  const grand = {}; sumCols.forEach(c => grand[c.f] = 0);
+  const period = (from || to) ? `${from ? fmtDate(from) : '…'} – ${to ? fmtDate(to) : '…'}` : t('report.wholePeroid');
+  const groupLabel = t((cfg.groups.find(g => g.key === groupKey) || {}).label) || '—';
+
+  let html = `<div class="rpt">
+    <div class="rpt-title-band"><div><div class="rt-name">${escapeHtml(t(cfg.title))}</div><div class="rt-sub">${escapeHtml(t('app.title'))}</div></div></div>
+    <div class="rpt-params"><span>${t('report.period')}: <strong>${period}</strong></span><span>${t('report.groupByLabel')}: <strong>${escapeHtml(groupLabel)}</strong></span><span>${t('report.generatedAt')}: <strong>${fmtDateTime(new Date().toISOString())}</strong></span><span>${t('report.recordsLabel')}: <strong>${rows.length}</strong></span></div>`;
+
+  if (!rows.length) {
+    html += `<div class="rpt-empty">${t('report.noDataMsg')}</div></div>`;
+  } else {
+    html += `<table class="rpt-table"><thead><tr>${cfg.columns.map(c => `<th>${t(c.label)}</th>`).join('')}</tr></thead><tbody>`;
+    let curGroup = null, groupSums = {};
+    const flushSubtotal = () => {
+      if (groupKey && curGroup != null) {
+        html += `<tr class="rpt-subtotal">${cfg.columns.map((c, i) => i === 0 ? `<td>${t('report.groupSubtotal', { group: escapeHtml(curGroup) })}</td>` : (c.sum ? `<td class="num">${fmtSum(c, groupSums[c.f])}</td>` : '<td></td>')).join('')}</tr>`;
+      }
+    };
+    rows.forEach(row => {
+      const g = reportGroupValue(row, groupKey, cfg);
+      if (groupKey && g !== curGroup) {
+        flushSubtotal();
+        curGroup = g; groupSums = {}; sumCols.forEach(c => groupSums[c.f] = 0);
+        html += `<tr class="rpt-group"><td colspan="${cfg.columns.length}">${escapeHtml(g)}</td></tr>`;
+      }
+      html += `<tr>${cfg.columns.map(c => `<td${c.type === 'money' ? ' class="num"' : ''}>${reportCell(row, c)}</td>`).join('')}</tr>`;
+      sumCols.forEach(c => { groupSums[c.f] = (groupSums[c.f] || 0) + (Number(row[c.f]) || 0); grand[c.f] += (Number(row[c.f]) || 0); });
+    });
+    flushSubtotal();
+    html += `<tr class="rpt-grand">${cfg.columns.map((c, i) => i === 0 ? `<td>${t('report.grandTotal')}</td>` : (c.sum ? `<td class="num">${fmtSum(c, grand[c.f])}</td>` : '<td></td>')).join('')}</tr></tbody></table>`;
+    const first = sumCols[0];
+    if (first) {
+      const avg = rows.length ? grand[first.f] / rows.length : 0;
+      html += `<div class="rpt-summary"><span>${t('report.recordsCount')}: <b>${rows.length}</b></span><span>${t('report.totalOf', { label: t(first.label) })}: <b>${fmtSum(first, grand[first.f])}</b></span><span>${t('report.average')}: <b>${fmtSum(first, avg)}</b></span></div>`;
+    }
+    html += `</div>`;
+  }
+  reportHtml = html;
+  document.getElementById('reportPreview').innerHTML = html;
+}
+
+function fillReportGroups() {
+  const cfg = REPORTS[document.getElementById('reportSelect').value];
+  document.getElementById('reportGroup').innerHTML = cfg.groups.map(g => `<option value="${g.key}">${escapeHtml(t(g.label))}</option>`).join('');
+}
+function renderReportQuickPeriods() {
+  const y = new Date().getFullYear();
+  const wrap = document.getElementById('reportQuickPeriods');
+  const monthBtns = MONTH_NAMES[currentLang].map((name, i) => {
+    const m = i + 1;
+    const from = `${y}-${pad2(m)}-01`;
+    const to = `${y}-${pad2(m)}-${pad2(new Date(y, m, 0).getDate())}`;
+    return `<button type="button" class="qp-btn" data-from="${from}" data-to="${to}">${escapeHtml(name.slice(0, 3))}</button>`;
+  }).join('');
+  const yearBtn = `<button type="button" class="qp-btn qp-year" data-from="${y}-01-01" data-to="${y}-12-31">${escapeHtml(t('report.wholeYearBtn', { year: y }))}</button>`;
+  wrap.innerHTML = monthBtns + yearBtn;
+}
+function openReportDialog() {
+  document.getElementById('reportTitle').textContent = t('report.title');
+  const sel = document.getElementById('reportSelect');
+  sel.innerHTML = Object.entries(REPORTS).map(([id, r]) => `<option value="${id}">${escapeHtml(t(r.title))}</option>`).join('');
+  fillReportGroups();
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  document.getElementById('reportFrom').value = `${y}-${pad2(m + 1)}-01`;
+  document.getElementById('reportTo').value = `${y}-${pad2(m + 1)}-${pad2(new Date(y, m + 1, 0).getDate())}`;
+  reportHtml = ''; lastReport = null;
+  document.getElementById('reportPreview').innerHTML = `<p class="file-hint">${t('report.chooseHint')}</p>`;
+  renderReportQuickPeriods();
+  document.getElementById('reportDialog').showModal();
+}
+function printReport() {
+  if (!reportHtml) { toast(t('toast.generateFirst'), true); return; }
+  document.getElementById('reportPrintArea').innerHTML = reportHtml;
+  document.body.classList.add('report-printing');
+  window.addEventListener('afterprint', () => document.body.classList.remove('report-printing'), { once: true });
+  window.print();
+  setTimeout(() => document.body.classList.remove('report-printing'), 1500);
+}
+function exportReportXlsx() {
+  if (!lastReport) { toast(t('toast.generateFirst'), true); return; }
+  const { cfg, rows, groupKey } = lastReport;
+  const cols = cfg.columns;
+  const header = (groupKey ? [t('report.groupColHeader')] : []).concat(cols.map(c => t(c.label)));
+  const aoa = [header];
+  const grand = {}; cols.filter(c => c.sum).forEach(c => grand[c.f] = 0);
+  rows.forEach(row => {
+    const line = (groupKey ? [reportGroupValue(row, groupKey, cfg)] : []).concat(cols.map(c => {
+      if (c.type === 'date') return row[c.f] ? fmtDate(row[c.f]) : '';
+      if (c.type === 'money') return Number(row[c.f]) || 0;
+      if (c.map) return (c.map[row[c.f]] && t(c.map[row[c.f]])) || row[c.f] || '';
+      return row[c.f] == null ? '' : String(row[c.f]);
+    }));
+    aoa.push(line);
+    cols.filter(c => c.sum).forEach(c => grand[c.f] += Number(row[c.f]) || 0);
+  });
+  aoa.push((groupKey ? [''] : []).concat(cols.map((c, i) => i === 0 ? t('report.grandTotal') : (c.sum ? grand[c.f] : ''))));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), t('report.sheetName'));
+  XLSX.writeFile(wb, 'noam-report.xlsx');
+}
+
+// --- Version tracking & update check ---
+// Compares the running APP_VERSION against version.json (served from the same
+// origin, bumped by hand alongside APP_VERSION on any deploy that should force
+// a reload) and reloads automatically when a newer build is live.
+function updateVersionDisplay() {
+  const el = document.getElementById('versionInfo');
+  if (el) el.textContent = t('help.versionLabel', { v: APP_VERSION });
+}
+async function checkForUpdate(explicit) {
+  try {
+    const res = await fetch('./version.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('version.json not found');
+    const data = await res.json();
+    const stale = (data.version && data.version !== APP_VERSION) ||
+      (data.builtAt && APP_BUILT_AT !== 'dev' && data.builtAt !== APP_BUILT_AT);
+    if (stale) {
+      if (!sessionStorage.getItem('noam-auto-reloaded')) {
+        sessionStorage.setItem('noam-auto-reloaded', '1');
+        toast(t('toast.updateFound', { v: data.version }));
+        setTimeout(() => window.location.reload(), 1800);
+      } else if (explicit) {
+        toast(t('toast.updateFound', { v: data.version }));
+      }
+    } else {
+      sessionStorage.removeItem('noam-auto-reloaded');
+      if (explicit) toast(t('toast.upToDate'));
+    }
+  } catch (err) {
+    if (explicit) toast(t('toast.updateCheckFailed'), true);
+  }
+}
+
 // --- Backup reminder (tracks Excel exports, not just localStorage saves) ---
 const BACKUP_CLOCK_KEY = 'noam-last-backup-time';
 const BACKUP_REMINDER_INTERVAL_KEY = 'noam-backup-reminder-interval-min';
@@ -1372,16 +1674,41 @@ function init() {
     langToggle.setAttribute('aria-expanded', 'false');
   });
 
-  // Print
-  document.getElementById('printBtn').addEventListener('click', () => {
-    document.getElementById('printDate').textContent = fmtDateTime(new Date().toISOString());
-    window.print();
+  // Report Center
+  document.getElementById('printBtn').addEventListener('click', openReportDialog);
+  document.getElementById('reportSelect').addEventListener('change', fillReportGroups);
+  document.getElementById('reportGenerate').addEventListener('click', generateReport);
+  document.getElementById('reportPrint').addEventListener('click', printReport);
+  document.getElementById('reportExport').addEventListener('click', exportReportXlsx);
+  document.getElementById('closeReport').addEventListener('click', () => document.getElementById('reportDialog').close());
+  document.getElementById('reportQuickPeriods').addEventListener('click', ev => {
+    const btn = ev.target.closest('.qp-btn');
+    if (!btn) return;
+    document.getElementById('reportFrom').value = btn.dataset.from;
+    document.getElementById('reportTo').value = btn.dataset.to;
+    generateReport();
   });
 
   // Settings / data
   const settingsDialog = document.getElementById('settingsDialog');
   document.getElementById('settingsBtn').addEventListener('click', () => { renderFileStatus(); settingsDialog.showModal(); });
   document.getElementById('closeSettings').addEventListener('click', () => settingsDialog.close());
+  document.getElementById('settingsTabs').addEventListener('click', ev => {
+    const b = ev.target.closest('.tab');
+    if (!b) return;
+    document.querySelectorAll('#settingsTabs .tab').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.settings-section').forEach(s => { s.hidden = s.dataset.stab !== b.dataset.stab; });
+  });
+  // Stronger "force update" for a stale cached build - clears Cache Storage
+  // (leaves localStorage data untouched) and hard-reloads with a cache-busting
+  // query string.
+  document.getElementById('checkVersionBtn').addEventListener('click', () => {
+    if (window.caches && caches.keys) {
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+    }
+    toast(t('toast.clearingCache'));
+    setTimeout(() => { location.href = location.pathname + '?_=' + Date.now(); }, 600);
+  });
   document.getElementById('exportBtn').addEventListener('click', exportXlsx);
   const fileInput = document.getElementById('fileInput');
   document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
@@ -1403,8 +1730,10 @@ function init() {
 
   // Help
   const helpDialog = document.getElementById('helpDialog');
-  document.getElementById('helpBtn').addEventListener('click', () => helpDialog.showModal());
+  document.getElementById('helpBtn').addEventListener('click', () => { updateVersionDisplay(); checkForUpdate(false); helpDialog.showModal(); });
   document.getElementById('closeHelp').addEventListener('click', () => helpDialog.close());
+  document.getElementById('checkUpdateBtn').addEventListener('click', () => checkForUpdate(true));
+  setTimeout(() => checkForUpdate(false), 4000);
 
   // Backup reminder
   updateBackupClock();
@@ -1425,7 +1754,7 @@ function init() {
     settingsDialog.showModal();
   });
 
-  [settingsDialog, helpDialog, backupReminderDialog, subtasksDialog, document.getElementById('copyContactDialog')].forEach(wireBackdropClose);
+  [settingsDialog, helpDialog, backupReminderDialog, subtasksDialog, document.getElementById('copyContactDialog'), document.getElementById('reportDialog')].forEach(wireBackdropClose);
 }
 init();
 </script>
