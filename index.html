@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>נועם — ניהול פרויקטים</title>
+<meta name="theme-color" content="#0C1729">
+<meta name="mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;500;700&family=Noto+Sans+Arabic:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --color-primary: #1E40AF;
+    --color-secondary: #3B82F6;
+    --color-accent: #059669;
+    --color-bg: #0F172A;
+    --color-fg: #FFFFFF;
+    --color-muted: #101A34;
+    --color-card: #16213E;
+    --color-border: rgba(255,255,255,0.08);
+    --color-destructive: #DC2626;
+    --color-text-dim: #94A3B8;
+    --color-success: #34D399;
+    --radius: 12px;
+    --space-1: 8px;
+    --space-2: 12px;
+    --space-3: 16px;
+    --space-4: 24px;
+    --space-5: 32px;
+  }
+  [data-theme="light"] {
+    --color-bg: #F1F5F9;
+    --color-fg: #0F172A;
+    --color-muted: #E9EEF5;
+    --color-card: #FFFFFF;
+    --color-border: rgba(15,23,42,0.12);
+    --color-text-dim: #64748B;
+    --color-success: #059669;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--color-bg); color: var(--color-fg);
+    transition: background 250ms ease-out, color 250ms ease-out;
+    font-family: 'Noto Sans Hebrew', sans-serif; font-size: 16px; line-height: 1.5; min-height: 100dvh;
+  }
+  body.lang-ar { font-family: 'Noto Sans Arabic', sans-serif; }
+  .container { max-width: 1100px; margin: 0 auto; padding: var(--space-4) var(--space-3); }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  header h1 { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  header h1 svg { color: var(--color-secondary); }
+  .header-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .file-hint { color: var(--color-text-dim); font-size: 13px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-4); }
+  .card { background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); display: flex; flex-direction: column; gap: 4px; }
+  .card .cat-label { display: flex; align-items: center; gap: 8px; color: var(--color-text-dim); font-size: 14px; font-weight: 500; }
+  .card .amount { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .card .amount.neg { color: #F87171; }
+  [data-theme="light"] .card .amount.neg { color: #DC2626; }
+  .card .sub { font-size: 12px; color: var(--color-text-dim); }
+  .card.total { border-color: var(--color-accent); }
+  .card.total .amount { color: var(--color-success); }
+
+  .panel { background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); margin-bottom: var(--space-4); }
+  .panel h2 { font-size: 16px; font-weight: 500; margin-bottom: var(--space-2); color: var(--color-text-dim); }
+
+  form.add-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-2); align-items: end; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--color-text-dim); }
+  input, select, textarea { background: var(--color-muted); color: var(--color-fg); border: 1px solid var(--color-border); border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 15px; min-height: 44px; }
+  input:focus, select:focus, button:focus { outline: 2px solid var(--color-secondary); outline-offset: 1px; }
+  button { cursor: pointer; border: none; border-radius: 8px; min-height: 44px; padding: 10px 20px; font-family: inherit; font-size: 15px; font-weight: 500; transition: background 200ms ease-out, transform 150ms ease-out; }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: var(--color-primary); color: #fff; }
+  .btn-primary:hover { background: var(--color-secondary); }
+  .btn-ghost { background: transparent; color: var(--color-text-dim); border: 1px solid var(--color-border); }
+  .btn-ghost:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
+  .btn-danger { background: transparent; color: var(--color-destructive); border: 1px solid var(--color-destructive); min-height: 36px; padding: 4px 12px; font-size: 13px; }
+  .btn-danger:hover { background: rgba(220,38,38,0.15); }
+  .btn-edit { background: transparent; color: var(--color-secondary); border: 1px solid var(--color-secondary); min-height: 36px; padding: 4px 12px; font-size: 13px; }
+  .btn-edit:hover { background: rgba(59,130,246,0.15); }
+  .icon-btn { background: var(--color-card); color: var(--color-fg); border: 1px solid var(--color-border); min-width: 44px; min-height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; }
+  .icon-btn:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
+  #backupClock.is-stale { color: var(--color-destructive); border-color: var(--color-destructive); }
+  [data-theme="light"] .icon-moon { display: none; }
+  :root:not([data-theme="light"]) .icon-sun { display: none; }
+  .lang-code { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
+  .lang-wrap { position: relative; display: inline-flex; align-items: center; }
+  .lang-menu { position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 1000; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-1); min-width: 160px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 2px; }
+  .lang-menu[hidden] { display: none; }
+  .lang-item { display: flex; align-items: center; background: transparent; color: var(--color-fg); text-align: start; padding: 10px 12px; border-radius: 8px; min-height: 40px; font-size: 15px; }
+  .lang-item:hover { background: var(--color-muted); }
+  .lang-item.active { background: rgba(59,130,246,0.15); font-weight: 600; }
+
+  .amount-in { color: var(--color-success); }
+  .amount-out { color: #F87171; }
+  [data-theme="light"] .amount-out { color: #DC2626; }
+  .type-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 13px; white-space: nowrap; }
+  .st-planning, .st-open, .st-normal { background: rgba(148,163,184,0.18); color: #94A3B8; }
+  .st-active { background: rgba(5,150,105,0.18); color: var(--color-success); }
+  .st-paused, .st-inprogress, .st-urgent { background: rgba(217,119,6,0.18); color: #F59E0B; }
+  .st-done { background: rgba(59,130,246,0.18); color: var(--color-secondary); }
+  .st-critical { background: rgba(220,38,38,0.16); color: #F87171; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: start; padding: 10px 12px; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+  th { color: var(--color-text-dim); font-weight: 500; font-size: 13px; }
+  td.num { font-variant-numeric: tabular-nums; font-weight: 500; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .actions-cell { display: flex; gap: 8px; }
+  .empty { text-align: center; color: var(--color-text-dim); padding: var(--space-5); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+  .tab { background: transparent; color: var(--color-text-dim); border: none; border-bottom: 2px solid transparent; border-radius: 8px 8px 0 0; padding: 10px 20px; min-height: 44px; font-size: 15px; }
+  .tab:hover { color: var(--color-fg); }
+  .tab.active { color: var(--color-secondary); border-bottom-color: var(--color-secondary); font-weight: 600; }
+  .tab-panel[hidden] { display: none; }
+
+  /* Project switcher strip */
+  .proj-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; cursor: grab; scrollbar-width: none; -ms-overflow-style: none; }
+  .proj-strip::-webkit-scrollbar { display: none; }
+  .proj-strip.dragging { cursor: grabbing; user-select: none; }
+  .proj-chip {
+    flex: 0 0 auto; min-width: 120px; max-width: 200px; padding: 8px 14px; border-radius: 10px;
+    background: var(--color-muted); border: 1px solid var(--color-border);
+    color: var(--color-fg); text-align: start; cursor: pointer;
+    display: flex; flex-direction: column; gap: 2px;
+    transition: border-color 150ms, background 150ms;
+  }
+  .proj-chip:hover { border-color: var(--color-secondary); }
+  .proj-chip.active { background: rgba(59,130,246,0.18); border-color: var(--color-secondary); outline: 2px solid var(--color-secondary); outline-offset: -2px; }
+  .proj-chip .pname { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .proj-chip .pstatus { font-size: 11px; color: var(--color-text-dim); }
+  .proj-chip-all { min-width: 92px; font-weight: 700; align-items: center; justify-content: center; flex-direction: row; }
+  .proj-chip-new {
+    min-width: 92px; font-weight: 700; align-items: center; justify-content: center; flex-direction: row;
+    background: transparent; border-style: dashed; color: var(--color-secondary);
+  }
+  .proj-chip-new:hover { background: rgba(59,130,246,0.12); }
+
+  /* Subtasks */
+  .subtask-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--color-border); }
+  .subtask-row:last-child { border-bottom: none; }
+  .subtask-row span { flex: 1; }
+  .subtask-row.done span { text-decoration: line-through; color: var(--color-text-dim); }
+  .subtask-row button { background: transparent; border: none; color: var(--color-text-dim); cursor: pointer; font-size: 14px; min-height: auto; padding: 4px; }
+  .subtask-row button:hover { color: #F87171; }
+  .subtask-add-row { display: flex; gap: 8px; margin-top: 10px; }
+  .subtask-add-row input { flex: 1; }
+  .subtasks-btn { display: inline-flex; align-items: center; gap: 4px; }
+
+  #toast { position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); background: var(--color-accent); color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 250ms ease-out; z-index: 100; }
+  #toast.show { opacity: 1; }
+  #toast.error { background: var(--color-destructive); }
+
+  dialog { background: var(--color-card); color: var(--color-fg); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-4); max-width: 480px; width: 90%; margin: auto; }
+  dialog:not([open]) { display: none; }
+  dialog::backdrop { background: rgba(0,0,0,0.55); }
+  dialog h3 { margin-bottom: var(--space-3); }
+  .dialog-actions { display: flex; gap: var(--space-2); justify-content: flex-start; margin-top: var(--space-3); }
+  .file-status { background: var(--color-muted); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-2); font-size: 14px; margin-bottom: var(--space-2); }
+  .file-status strong { font-variant-numeric: tabular-nums; }
+  .file-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .file-actions button { min-height: 40px; }
+  .help-body { font-size: 14px; line-height: 1.75; max-height: 60vh; overflow-y: auto; padding-inline-end: 6px; }
+  .help-section { margin-bottom: 18px; }
+  .help-section h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--color-fg); }
+  .help-body p { color: var(--color-text-dim); }
+
+  /* Print-only elements (hidden on screen) */
+  .print-only { display: none; }
+  #printHeader { align-items: center; gap: 16px; margin-bottom: 20px; }
+  #printHeader .ph-title { font-size: 22px; font-weight: 700; }
+  #printHeader .ph-date { font-size: 14px; color: #555; }
+  @media print {
+    @page { margin: 1.2cm; }
+    html, body { background: #fff !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    header, #toast, dialog, .header-actions, .add-form, form, .actions-cell, .file-hint, .empty, .proj-strip, .tabs { display: none !important; }
+    .container { max-width: 100% !important; padding: 0 !important; }
+    .print-only { display: flex !important; }
+    .tab-panel[hidden] { display: block !important; }
+    .panel, .card { background: #fff !important; color: #000 !important; border: 1px solid #bbb !important; box-shadow: none !important; break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; }
+    h2, .cat-label, .sub, th, td, .amount { color: #000 !important; }
+    .amount-in, .card.total .amount { color: #067647 !important; }
+    .amount-out, .amount.neg { color: #b42318 !important; }
+    .table-wrap { overflow: visible !important; }
+    table { width: 100% !important; }
+    tr { page-break-inside: avoid; }
+  }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; align-items: stretch; }
+    .header-actions { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span data-i18n="app.title">נועם — ניהול פרויקטים</span>
+    </h1>
+    <div class="header-actions">
+      <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+      <button type="button" class="icon-btn" id="backupClock" data-i18n-aria="header.backupClockTitle" aria-label="זמן מאז הגיבוי האחרון — פתיחת הגדרות גיבוי">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="printBtn" data-i18n-aria="header.printBtn" aria-label="הדפסה">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="settingsBtn" data-i18n-aria="header.settingsBtn" aria-label="הגדרות">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="themeToggle" data-i18n-aria="header.themeToggle" aria-label="החלפת עיצוב כהה / בהיר">
+        <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <div class="lang-wrap">
+        <button type="button" class="icon-btn" id="langToggle" data-i18n-aria="lang.toggleAria" aria-label="שינוי שפה" aria-haspopup="true" aria-expanded="false">
+          <span class="lang-code" id="langCode">עב</span>
+        </button>
+        <nav class="lang-menu" id="langMenu" hidden aria-label="שפה / Language / Язык / اللغة">
+          <button type="button" class="lang-item" data-lang="he">עברית</button>
+          <button type="button" class="lang-item" data-lang="en">English</button>
+          <button type="button" class="lang-item" data-lang="ru">Русский</button>
+          <button type="button" class="lang-item" data-lang="ar">العربية</button>
+        </nav>
+      </div>
+      <button type="button" class="icon-btn help-btn" id="helpBtn" data-i18n-aria="header.helpBtn" aria-label="עזרה">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="printHeader" class="print-only">
+    <div>
+      <div class="ph-title" data-i18n="app.title">נועם — ניהול פרויקטים</div>
+      <div class="ph-date" id="printDate"></div>
+    </div>
+  </div>
+
+  <section class="panel" style="margin-bottom:16px">
+    <div class="proj-strip" id="projSwitcherStrip"></div>
+  </section>
+
+  <div class="tabs" id="mainTabs">
+    <button type="button" class="tab active" data-tab="overview" data-i18n="nav.tabOverview">סקירה</button>
+    <button type="button" class="tab" data-tab="projects" data-i18n="nav.tabProjects">פרויקטים</button>
+    <button type="button" class="tab" data-tab="tasks" data-i18n="nav.tabTasks">משימות</button>
+    <button type="button" class="tab" data-tab="expenses" data-i18n="nav.tabExpenses">הוצאות</button>
+    <button type="button" class="tab" data-tab="contacts" data-i18n="nav.tabContacts">אנשי קשר</button>
+  </div>
+
+  <!-- Overview -->
+  <div class="tab-panel" data-panel="overview">
+    <section class="cards" id="overviewCards"></section>
+    <section class="panel">
+      <h2 data-i18n="overview.statusTableTitle">סטטוס פרויקטים</h2>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th data-i18n="field.name">שם</th>
+          <th data-i18n="field.status">סטטוס</th>
+          <th data-i18n="field.budget">תקציב</th>
+          <th data-i18n="overview.colSpent">הוצא</th>
+          <th data-i18n="overview.colRemaining">נותר</th>
+          <th data-i18n="overview.colOpenTasks">משימות פתוחות</th>
+        </tr></thead>
+        <tbody id="overviewBody"></tbody></table>
+        <div class="empty" id="overviewEmpty" data-i18n="overview.noProjectsMsg" hidden>עדיין אין פרויקטים.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Projects -->
+  <div class="tab-panel" data-panel="projects" hidden>
+    <section class="panel">
+      <h2 data-i18n="projects.addLabel">הוספת פרויקט</h2>
+      <form class="add-form" id="projectForm">
+        <label><span data-i18n="field.name">שם</span> <input type="text" data-f="name" required></label>
+        <label><span data-i18n="field.description">תיאור</span> <input type="text" data-f="description"></label>
+        <label><span data-i18n="field.status">סטטוס</span>
+          <select data-f="status">
+            <option value="planning" data-i18n="enum.status.planning">בתכנון</option>
+            <option value="active" data-i18n="enum.status.active">פעיל</option>
+            <option value="paused" data-i18n="enum.status.paused">מושהה</option>
+            <option value="done" data-i18n="enum.status.done">הושלם</option>
+          </select>
+        </label>
+        <label><span data-i18n="field.startDate">תאריך התחלה</span> <input type="date" data-f="startDate"></label>
+        <label><span data-i18n="field.dueDate">תאריך יעד</span> <input type="date" data-f="dueDate"></label>
+        <label><span data-i18n="field.budget">תקציב (₪)</span> <input type="number" data-f="budget" step="0.01" min="0" placeholder="0.00"></label>
+        <button type="submit" class="btn-primary" data-i18n="common.add">הוספה</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2 data-i18n="projects.listTitle">כל הפרויקטים</h2>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th data-i18n="field.name">שם</th>
+          <th data-i18n="field.status">סטטוס</th>
+          <th data-i18n="field.startDate">התחלה</th>
+          <th data-i18n="field.dueDate">יעד</th>
+          <th data-i18n="field.budget">תקציב</th>
+          <th data-i18n="common.actions">פעולות</th>
+        </tr></thead>
+        <tbody id="projectsBody"></tbody></table>
+        <div class="empty" id="projectsEmpty" data-i18n="projects.emptyMsg" hidden>אין עדיין פרויקטים. הוסיפו את הראשון למעלה.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tasks -->
+  <div class="tab-panel" data-panel="tasks" hidden>
+    <section class="panel">
+      <h2 data-i18n="tasks.addLabel">הוספת משימה</h2>
+      <form class="add-form" id="taskForm">
+        <label><span data-i18n="field.name">שם</span> <input type="text" data-f="name" required></label>
+        <label><span data-i18n="field.project">פרויקט</span> <select data-f="project" class="proj-select"></select></label>
+        <label><span data-i18n="field.assignee">אחראי</span> <input type="text" data-f="assignee"></label>
+        <label><span data-i18n="field.dueDate">תאריך יעד</span> <input type="date" data-f="dueDate"></label>
+        <label><span data-i18n="field.priority">עדיפות</span>
+          <select data-f="priority">
+            <option value="normal" data-i18n="enum.priority.normal">רגילה</option>
+            <option value="urgent" data-i18n="enum.priority.urgent">דחוף</option>
+            <option value="critical" data-i18n="enum.priority.critical">קריטי</option>
+          </select>
+        </label>
+        <label><span data-i18n="field.status">סטטוס</span>
+          <select data-f="status">
+            <option value="open" data-i18n="enum.taskStatus.open">פתוח</option>
+            <option value="inprogress" data-i18n="enum.taskStatus.inprogress">בטיפול</option>
+            <option value="done" data-i18n="enum.taskStatus.done">טופל</option>
+          </select>
+        </label>
+        <label><span data-i18n="field.notes">הערות</span> <input type="text" data-f="notes"></label>
+        <button type="submit" class="btn-primary" data-i18n="common.add">הוספה</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2 data-i18n="tasks.listTitle">כל המשימות</h2>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th data-i18n="field.name">שם</th>
+          <th data-i18n="field.project">פרויקט</th>
+          <th data-i18n="field.assignee">אחראי</th>
+          <th data-i18n="field.dueDate">יעד</th>
+          <th data-i18n="field.priority">עדיפות</th>
+          <th data-i18n="field.status">סטטוס</th>
+          <th data-i18n="tasks.subtasksCol">תת-משימות</th>
+          <th data-i18n="common.actions">פעולות</th>
+        </tr></thead>
+        <tbody id="tasksBody"></tbody></table>
+        <div class="empty" id="tasksEmpty" data-i18n="tasks.emptyMsg" hidden>אין עדיין משימות. הוסיפו את הראשונה למעלה.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Expenses -->
+  <div class="tab-panel" data-panel="expenses" hidden>
+    <section class="panel">
+      <h2 data-i18n="expenses.addLabel">הוספת הוצאה</h2>
+      <form class="add-form" id="expenseForm">
+        <label><span data-i18n="field.date">תאריך</span> <input type="date" data-f="date" required></label>
+        <label><span data-i18n="field.project">פרויקט</span> <select data-f="project" class="proj-select"></select></label>
+        <label><span data-i18n="field.description">תיאור</span> <input type="text" data-f="description"></label>
+        <label><span data-i18n="field.amount">סכום (₪)</span> <input type="number" data-f="amount" step="0.01" min="0" required placeholder="0.00"></label>
+        <button type="submit" class="btn-primary" data-i18n="common.add">הוספה</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2 data-i18n="expenses.listTitle">כל ההוצאות</h2>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th data-i18n="field.date">תאריך</th>
+          <th data-i18n="field.project">פרויקט</th>
+          <th data-i18n="field.description">תיאור</th>
+          <th data-i18n="field.amount">סכום</th>
+          <th data-i18n="common.actions">פעולות</th>
+        </tr></thead>
+        <tbody id="expensesBody"></tbody></table>
+        <div class="empty" id="expensesEmpty" data-i18n="expenses.emptyMsg" hidden>אין עדיין הוצאות. הוסיפו את הראשונה למעלה.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Contacts -->
+  <div class="tab-panel" data-panel="contacts" hidden>
+    <section class="panel">
+      <h2 data-i18n="contacts.addLabel">הוספת איש קשר</h2>
+      <form class="add-form" id="contactForm">
+        <label><span data-i18n="field.name">שם</span> <input type="text" data-f="name" required></label>
+        <label><span data-i18n="field.role">תפקיד</span> <input type="text" data-f="role"></label>
+        <label><span data-i18n="field.project">פרויקט</span> <select data-f="project" class="proj-select"></select></label>
+        <label><span data-i18n="field.phone">טלפון</span> <input type="tel" data-f="phone" dir="ltr"></label>
+        <label><span data-i18n="field.notes">הערות</span> <input type="text" data-f="notes"></label>
+        <button type="submit" class="btn-primary" data-i18n="common.add">הוספה</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2 data-i18n="contacts.listTitle">כל אנשי הקשר</h2>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th data-i18n="field.name">שם</th>
+          <th data-i18n="field.role">תפקיד</th>
+          <th data-i18n="field.project">פרויקט</th>
+          <th data-i18n="field.phone">טלפון</th>
+          <th data-i18n="common.actions">פעולות</th>
+        </tr></thead>
+        <tbody id="contactsBody"></tbody></table>
+        <div class="empty" id="contactsEmpty" data-i18n="contacts.emptyMsg" hidden>אין עדיין אנשי קשר. הוסיפו את הראשון למעלה.</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<dialog id="settingsDialog">
+  <h3 data-i18n="settings.title">הגדרות</h3>
+  <div class="file-status" id="fileStatus"></div>
+  <div class="file-actions">
+    <button type="button" class="btn-edit" id="exportBtn" data-i18n="data.exportBtn">ייצוא לאקסל</button>
+    <button type="button" class="btn-edit" id="importBtn" data-i18n="data.importBtn">ייבוא מאקסל</button>
+    <button type="button" class="btn-danger" id="deleteAllBtn" data-i18n="data.deleteAllBtn">מחיקת כל הנתונים</button>
+  </div>
+  <p class="file-hint" style="margin-top:8px" data-i18n="data.hint">הנתונים נשמרים בדפדפן הזה בלבד. מומלץ לייצא גיבוי לאקסל מדי פעם.</p>
+  <h4 style="margin-top:16px" data-i18n="settings.backupReminder.heading">תזכורת גיבוי</h4>
+  <p class="file-hint" data-i18n="settings.backupReminder.hint">כשעובר הזמן שבחרתם בלי ייצוא לאקסל, נועם יזכיר לכם עם חלון קופץ. בדפדפנים מסוימים (למשל Safari באייפון) המידע המקומי עלול להימחק אחרי שבוע בלי שימוש, אלא אם שומרים קיצור דרך למסך הבית.</p>
+  <label><span data-i18n="settings.backupReminder.label">תדירות התזכורת</span>
+    <select id="backupReminderInterval">
+      <option value="5" data-i18n="settings.backupReminder.every5">כל 5 דקות</option>
+      <option value="10" data-i18n="settings.backupReminder.every10">כל 10 דקות</option>
+      <option value="15" data-i18n="settings.backupReminder.every15">כל 15 דקות</option>
+      <option value="30" data-i18n="settings.backupReminder.every30">כל 30 דקות</option>
+      <option value="60" data-i18n="settings.backupReminder.every60">כל שעה</option>
+      <option value="off" data-i18n="settings.backupReminder.off">בלי תזכורת</option>
+    </select>
+  </label>
+  <div class="dialog-actions">
+    <button type="button" class="btn-ghost" id="closeSettings" data-i18n="common.close">סגור</button>
+  </div>
+</dialog>
+
+<dialog id="backupReminderDialog">
+  <h3 data-i18n="backup.reminderTitle">עדיין לא בוצע גיבוי</h3>
+  <p class="file-hint" data-i18n="backup.reminderHint">עבר הזמן שבחרתם בלי גיבוי עדכני. מומלץ לייצא גיבוי לאקסל מההגדרות.</p>
+  <p class="file-hint" data-i18n="backup.reminderFrequencyHint">אפשר לשנות את תדירות התזכורת הזו בכל עת דרך חלון ההגדרות.</p>
+  <div class="dialog-actions">
+    <button type="button" class="btn-primary" id="openSettingsFromBackupReminder" data-i18n="settings.title">הגדרות</button>
+    <button type="button" class="btn-ghost" id="closeBackupReminder" data-i18n="common.close">סגור</button>
+  </div>
+</dialog>
+
+<dialog id="helpDialog">
+  <h3 data-i18n="help.title">עזרה</h3>
+  <div class="help-body">
+    <div class="help-section">
+      <h4 data-i18n="help.whatTitle">מה זה נועם?</h4>
+      <p data-i18n="help.whatBody">נועם הוא כלי לניהול פרויקטים — פרויקטים, משימות עם תת-משימות, הוצאות ואנשי קשר, הכל במקום אחד, ללא צורך בהתחברות או חשבון.</p>
+    </div>
+    <div class="help-section">
+      <h4 data-i18n="help.projectsTitle">פרויקטים</h4>
+      <p data-i18n="help.projectsBody">כל פרויקט כולל שם, תיאור, סטטוס, תאריכי התחלה/יעד ותקציב. הרצועה למעלה מאפשרת לסנן את המשימות, ההוצאות ואנשי הקשר לפי פרויקט נבחר בלחיצה על השבב שלו.</p>
+    </div>
+    <div class="help-section">
+      <h4 data-i18n="help.tasksTitle">משימות ותת-משימות</h4>
+      <p data-i18n="help.tasksBody">לכל משימה אפשר לשייך פרויקט, אחראי, תאריך יעד, עדיפות וסטטוס. לחיצה על כפתור תת-המשימות בטבלה פותחת רשימת צ'קליסט קטנה בתוך המשימה.</p>
+    </div>
+    <div class="help-section">
+      <h4 data-i18n="help.expensesTitle">הוצאות</h4>
+      <p data-i18n="help.expensesBody">הוצאות משויכות לפרויקט מסוימים, וטאב הסקירה מציג לכל פרויקט את התקציב מול הסכום שהוצא והיתרה שנותרה.</p>
+    </div>
+    <div class="help-section">
+      <h4 data-i18n="help.contactsTitle">אנשי קשר</h4>
+      <p data-i18n="help.contactsBody">איש קשר יכול להיות משויך לפרויקט אחד, ואם הוא מעורב גם בפרויקט נוסף אפשר להשתמש בכפתור "העתקה לפרויקט אחר" כדי ליצור עבורו רשומה עצמאית נוספת.</p>
+    </div>
+    <div class="help-section">
+      <h4 data-i18n="help.dataTitle">שמירת נתונים וגיבוי</h4>
+      <p data-i18n="help.dataBody">הנתונים נשמרים רק בדפדפן הזה, במכשיר הזה — אין שרת וללא חשבון. אם מנקים היסטוריית גלישה, עוברים למכשיר אחר, או לא פותחים את האתר במשך שבוע ב-Safari באייפון בלי לשמור קיצור דרך למסך הבית — המידע עלול להיעלם. מומלץ לייצא גיבוי לאקסל מדי פעם דרך ההגדרות, ולייבא אותו בחזרה במידת הצורך.</p>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button type="button" class="btn-ghost" id="closeHelp" data-i18n="common.close">סגור</button>
+  </div>
+</dialog>
+
+<dialog id="subtasksDialog">
+  <h3 id="subtasksTitle" data-i18n="subtasks.title">תת-משימות</h3>
+  <div id="subtasksList"></div>
+  <div class="subtask-add-row">
+    <input type="text" id="subtaskInput" data-i18n-ph="subtasks.addPh" placeholder="תת-משימה חדשה">
+    <button type="button" class="btn-primary" id="addSubtaskBtn" data-i18n="common.add">הוספה</button>
+  </div>
+  <div class="dialog-actions">
+    <button type="button" class="btn-ghost" id="closeSubtasks" data-i18n="common.close">סגור</button>
+  </div>
+</dialog>
+
+<dialog id="copyContactDialog">
+  <h3 data-i18n="contacts.copyDialogTitle">העתקת איש קשר לפרויקט אחר</h3>
+  <p class="file-hint"><span data-i18n="contacts.copyDialogHint">יצירת רשומה עצמאית נוספת עבור</span> <strong id="copyContactName"></strong></p>
+  <label><span data-i18n="field.project">פרויקט</span> <select id="copyContactProjectSelect"></select></label>
+  <div class="dialog-actions">
+    <button type="button" class="btn-primary" id="copyContactConfirmBtn" data-i18n="contacts.copyBtn">העתקה</button>
+    <button type="button" class="btn-ghost" id="copyContactCancelBtn" data-i18n="common.cancel">ביטול</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const LANG_ORDER = ['he', 'en', 'ru', 'ar'];
+const RTL_LANGS = ['he', 'ar'];
+const MONTH_NAMES = {
+  he: ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'],
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+  ru: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+  ar: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
+};
+const I18N = {
+  'app.title': { he: 'נועם — ניהול פרויקטים', en: 'Noam — Project Management', ru: 'Ноам — Управление проектами', ar: 'نوعام — إدارة المشاريع' },
+  'header.themeToggle': { he: 'החלפת עיצוב כהה / בהיר', en: 'Toggle dark / light theme', ru: 'Переключить тёмную / светлую тему', ar: 'تبديل الوضع الداكن / الفاتح' },
+  'lang.toggleAria': { he: 'שינוי שפה / Change language / Изменить язык', en: 'Change language', ru: 'Изменить язык', ar: 'تغيير اللغة' },
+  'header.printBtn': { he: 'הדפסה', en: 'Print', ru: 'Печать', ar: 'طباعة' },
+  'header.settingsBtn': { he: 'הגדרות', en: 'Settings', ru: 'Настройки', ar: 'الإعدادات' },
+  'header.helpBtn': { he: 'עזרה', en: 'Help', ru: 'Справка', ar: 'مساعدة' },
+  'header.backupClockTitle': { he: 'זמן מאז הגיבוי האחרון', en: 'Time since last backup', ru: 'Время с последней резервной копии', ar: 'الوقت منذ آخر نسخة احتياطية' },
+  'header.backupClockNever': { he: 'טרם בוצע גיבוי — לחצו לפתיחת הגדרות', en: 'No backup yet - click to open settings', ru: 'Резервной копии ещё нет — нажмите, чтобы открыть настройки', ar: 'لم يتم إجراء نسخة احتياطية بعد — انقروا لفتح الإعدادات' },
+
+  'nav.tabOverview': { he: 'סקירה', en: 'Overview', ru: 'Обзор', ar: 'نظرة عامة' },
+  'nav.tabProjects': { he: 'פרויקטים', en: 'Projects', ru: 'Проекты', ar: 'المشاريع' },
+  'nav.tabTasks': { he: 'משימות', en: 'Tasks', ru: 'Задачи', ar: 'المهام' },
+  'nav.tabExpenses': { he: 'הוצאות', en: 'Expenses', ru: 'Расходы', ar: 'المصروفات' },
+  'nav.tabContacts': { he: 'אנשי קשר', en: 'Contacts', ru: 'Контакты', ar: 'جهات الاتصال' },
+
+  'switcher.allProjects': { he: 'הכל', en: 'All', ru: 'Все', ar: 'الكل' },
+  'switcher.newProject': { he: 'פרויקט חדש', en: 'New project', ru: 'Новый проект', ar: 'مشروع جديد' },
+
+  'field.name': { he: 'שם', en: 'Name', ru: 'Имя', ar: 'الاسم' },
+  'field.description': { he: 'תיאור', en: 'Description', ru: 'Описание', ar: 'الوصف' },
+  'field.status': { he: 'סטטוס', en: 'Status', ru: 'Статус', ar: 'الحالة' },
+  'field.startDate': { he: 'תאריך התחלה', en: 'Start date', ru: 'Дата начала', ar: 'تاريخ البدء' },
+  'field.dueDate': { he: 'תאריך יעד', en: 'Due date', ru: 'Срок', ar: 'تاريخ الاستحقاق' },
+  'field.budget': { he: 'תקציב (₪)', en: 'Budget (₪)', ru: 'Бюджет (₪)', ar: 'الميزانية (₪)' },
+  'field.project': { he: 'פרויקט', en: 'Project', ru: 'Проект', ar: 'المشروع' },
+  'field.noProjectOpt': { he: '— ללא —', en: '— None —', ru: '— Нет —', ar: '— بدون —' },
+  'field.assignee': { he: 'אחראי', en: 'Assignee', ru: 'Ответственный', ar: 'المسؤول' },
+  'field.priority': { he: 'עדיפות', en: 'Priority', ru: 'Приоритет', ar: 'الأولوية' },
+  'field.notes': { he: 'הערות', en: 'Notes', ru: 'Примечания', ar: 'ملاحظات' },
+  'field.date': { he: 'תאריך', en: 'Date', ru: 'Дата', ar: 'التاريخ' },
+  'field.amount': { he: 'סכום (₪)', en: 'Amount (₪)', ru: 'Сумма (₪)', ar: 'المبلغ (₪)' },
+  'field.role': { he: 'תפקיד', en: 'Role', ru: 'Роль', ar: 'الدور' },
+  'field.phone': { he: 'טלפון', en: 'Phone', ru: 'Телефон', ar: 'الهاتف' },
+
+  'enum.status.planning': { he: 'בתכנון', en: 'Planning', ru: 'Планирование', ar: 'قيد التخطيط' },
+  'enum.status.active': { he: 'פעיל', en: 'Active', ru: 'Активен', ar: 'نشط' },
+  'enum.status.paused': { he: 'מושהה', en: 'Paused', ru: 'Приостановлен', ar: 'متوقف مؤقتاً' },
+  'enum.status.done': { he: 'הושלם', en: 'Done', ru: 'Завершён', ar: 'مكتمل' },
+  'enum.priority.normal': { he: 'רגילה', en: 'Normal', ru: 'Обычный', ar: 'عادية' },
+  'enum.priority.urgent': { he: 'דחוף', en: 'Urgent', ru: 'Срочный', ar: 'عاجلة' },
+  'enum.priority.critical': { he: 'קריטי', en: 'Critical', ru: 'Критический', ar: 'حرجة' },
+  'enum.taskStatus.open': { he: 'פתוח', en: 'Open', ru: 'Открыта', ar: 'مفتوحة' },
+  'enum.taskStatus.inprogress': { he: 'בטיפול', en: 'In progress', ru: 'В работе', ar: 'قيد التنفيذ' },
+  'enum.taskStatus.done': { he: 'טופל', en: 'Done', ru: 'Выполнена', ar: 'منجزة' },
+
+  'common.add': { he: 'הוספה', en: 'Add', ru: 'Добавить', ar: 'إضافة' },
+  'common.update': { he: 'עדכון', en: 'Update', ru: 'Обновить', ar: 'تحديث' },
+  'common.actions': { he: 'פעולות', en: 'Actions', ru: 'Действия', ar: 'إجراءات' },
+  'common.edit': { he: 'עריכה', en: 'Edit', ru: 'Изменить', ar: 'تعديل' },
+  'common.delete': { he: 'מחיקה', en: 'Delete', ru: 'Удалить', ar: 'حذف' },
+  'common.close': { he: 'סגור', en: 'Close', ru: 'Закрыть', ar: 'إغلاق' },
+  'common.cancel': { he: 'ביטול', en: 'Cancel', ru: 'Отмена', ar: 'إلغاء' },
+
+  'overview.totalProjects': { he: 'סה"כ פרויקטים', en: 'Total projects', ru: 'Всего проектов', ar: 'إجمالي المشاريع' },
+  'overview.activeProjects': { he: 'פרויקטים פעילים', en: 'Active projects', ru: 'Активные проекты', ar: 'المشاريع النشطة' },
+  'overview.openTasks': { he: 'משימות פתוחות', en: 'Open tasks', ru: 'Открытые задачи', ar: 'المهام المفتوحة' },
+  'overview.totalBudget': { he: 'תקציב כולל', en: 'Total budget', ru: 'Общий бюджет', ar: 'إجمالي الميزانية' },
+  'overview.totalSpent': { he: 'סה"כ הוצאות', en: 'Total spent', ru: 'Всего потрачено', ar: 'إجمالي المصروف' },
+  'overview.remainingBudget': { he: 'יתרת תקציב', en: 'Remaining budget', ru: 'Остаток бюджета', ar: 'الميزانية المتبقية' },
+  'overview.statusTableTitle': { he: 'סטטוס פרויקטים', en: 'Project status', ru: 'Статус проектов', ar: 'حالة المشاريع' },
+  'overview.noProjectsMsg': { he: 'עדיין אין פרויקטים.', en: 'No projects yet.', ru: 'Проектов пока нет.', ar: 'لا توجد مشاريع بعد.' },
+  'overview.colSpent': { he: 'הוצא', en: 'Spent', ru: 'Потрачено', ar: 'المصروف' },
+  'overview.colRemaining': { he: 'נותר', en: 'Remaining', ru: 'Осталось', ar: 'المتبقي' },
+  'overview.colOpenTasks': { he: 'משימות פתוחות', en: 'Open tasks', ru: 'Открытые задачи', ar: 'المهام المفتوحة' },
+
+  'projects.addLabel': { he: 'הוספת פרויקט', en: 'Add project', ru: 'Добавить проект', ar: 'إضافة مشروع' },
+  'projects.listTitle': { he: 'כל הפרויקטים', en: 'All projects', ru: 'Все проекты', ar: 'كل المشاريع' },
+  'projects.emptyMsg': { he: 'אין עדיין פרויקטים. הוסיפו את הראשון למעלה.', en: 'No projects yet. Add the first one above.', ru: 'Проектов пока нет. Добавьте первый выше.', ar: 'لا توجد مشاريع بعد. أضيفوا الأول أعلاه.' },
+
+  'tasks.addLabel': { he: 'הוספת משימה', en: 'Add task', ru: 'Добавить задачу', ar: 'إضافة مهمة' },
+  'tasks.listTitle': { he: 'כל המשימות', en: 'All tasks', ru: 'Все задачи', ar: 'كل المهام' },
+  'tasks.emptyMsg': { he: 'אין עדיין משימות. הוסיפו את הראשונה למעלה.', en: 'No tasks yet. Add the first one above.', ru: 'Задач пока нет. Добавьте первую выше.', ar: 'لا توجد مهام بعد. أضيفوا الأولى أعلاه.' },
+  'tasks.subtasksCol': { he: 'תת-משימות', en: 'Subtasks', ru: 'Подзадачи', ar: 'المهام الفرعية' },
+  'tasks.subtasksCount': { he: '{n} תת-משימות', en: '{n} subtasks', ru: '{n} подзадач', ar: '{n} مهام فرعية' },
+
+  'expenses.addLabel': { he: 'הוספת הוצאה', en: 'Add expense', ru: 'Добавить расход', ar: 'إضافة مصروف' },
+  'expenses.listTitle': { he: 'כל ההוצאות', en: 'All expenses', ru: 'Все расходы', ar: 'كل المصروفات' },
+  'expenses.emptyMsg': { he: 'אין עדיין הוצאות. הוסיפו את הראשונה למעלה.', en: 'No expenses yet. Add the first one above.', ru: 'Расходов пока нет. Добавьте первый выше.', ar: 'لا توجد مصروفات بعد. أضيفوا الأولى أعلاه.' },
+
+  'contacts.addLabel': { he: 'הוספת איש קשר', en: 'Add contact', ru: 'Добавить контакт', ar: 'إضافة جهة اتصال' },
+  'contacts.listTitle': { he: 'כל אנשי הקשר', en: 'All contacts', ru: 'Все контакты', ar: 'كل جهات الاتصال' },
+  'contacts.emptyMsg': { he: 'אין עדיין אנשי קשר. הוסיפו את הראשון למעלה.', en: 'No contacts yet. Add the first one above.', ru: 'Контактов пока нет. Добавьте первый выше.', ar: 'لا توجد جهات اتصال بعد. أضيفوا الأولى أعلاه.' },
+  'contacts.copyBtn': { he: 'העתקה', en: 'Copy', ru: 'Копировать', ar: 'نسخ' },
+  'contacts.copyBtnLabel': { he: 'העתקה לפרויקט אחר', en: 'Copy to another project', ru: 'Копировать в другой проект', ar: 'نسخ إلى مشروع آخر' },
+  'contacts.copyDialogTitle': { he: 'העתקת איש קשר לפרויקט אחר', en: 'Copy contact to another project', ru: 'Копировать контакт в другой проект', ar: 'نسخ جهة اتصال إلى مشروع آخر' },
+  'contacts.copyDialogHint': { he: 'יצירת רשומה עצמאית נוספת עבור', en: 'Creates a new independent record for', ru: 'Создаёт новую независимую запись для', ar: 'ينشئ سجلاً مستقلاً جديداً لـ' },
+  'contacts.copyNoOtherProjects': { he: 'אין פרויקט אחר להעתיק אליו', en: 'No other project to copy to', ru: 'Нет другого проекта для копирования', ar: 'لا يوجد مشروع آخر للنسخ إليه' },
+  'contacts.copyDone': { he: 'איש הקשר הועתק', en: 'Contact copied', ru: 'Контакт скопирован', ar: 'تم نسخ جهة الاتصال' },
+
+  'subtasks.title': { he: 'תת-משימות', en: 'Subtasks', ru: 'Подзадачи', ar: 'المهام الفرعية' },
+  'subtasks.addPh': { he: 'תת-משימה חדשה', en: 'New subtask', ru: 'Новая подзадача', ar: 'مهمة فرعية جديدة' },
+  'subtasks.emptyMsg': { he: 'אין עדיין תת-משימות.', en: 'No subtasks yet.', ru: 'Подзадач пока нет.', ar: 'لا توجد مهام فرعية بعد.' },
+
+  'confirm.deleteProject': { he: 'למחוק את הפרויקט?', en: 'Delete this project?', ru: 'Удалить этот проект?', ar: 'هل تريد حذف هذا المشروع؟' },
+  'confirm.deleteTask': { he: 'למחוק את המשימה?', en: 'Delete this task?', ru: 'Удалить эту задачу?', ar: 'هل تريد حذف هذه المهمة؟' },
+  'confirm.deleteExpense': { he: 'למחוק את ההוצאה?', en: 'Delete this expense?', ru: 'Удалить этот расход?', ar: 'هل تريد حذف هذا المصروف؟' },
+  'confirm.deleteContact': { he: 'למחוק את איש הקשר?', en: 'Delete this contact?', ru: 'Удалить этот контакт?', ar: 'هل تريد حذف جهة الاتصال هذه؟' },
+  'confirm.deleteAllData': { he: 'למחוק את כל הנתונים? הפעולה לא ניתנת לביטול.', en: 'Delete all data? This cannot be undone.', ru: 'Удалить все данные? Это действие нельзя отменить.', ar: 'حذف كل البيانات؟ لا يمكن التراجع عن هذا الإجراء.' },
+
+  'toast.saved': { he: 'נשמר', en: 'Saved', ru: 'Сохранено', ar: 'تم الحفظ' },
+  'toast.added': { he: 'נוסף בהצלחה', en: 'Added successfully', ru: 'Успешно добавлено', ar: 'تمت الإضافة بنجاح' },
+  'toast.updated': { he: 'עודכן בהצלחה', en: 'Updated successfully', ru: 'Успешно обновлено', ar: 'تم التحديث بنجاح' },
+  'toast.deleted': { he: 'נמחק בהצלחה', en: 'Deleted successfully', ru: 'Успешно удалено', ar: 'تم الحذف بنجاح' },
+  'toast.exported': { he: 'קובץ הגיבוי (noam.xlsx) יורד', en: 'Backup file (noam.xlsx) is downloading', ru: 'Файл резервной копии (noam.xlsx) загружается', ar: 'جارٍ تنزيل ملف النسخة الاحتياطية (noam.xlsx)' },
+  'toast.imported': { he: 'הנתונים נטענו בהצלחה', en: 'Data loaded successfully', ru: 'Данные успешно загружены', ar: 'تم تحميل البيانات بنجاح' },
+  'toast.allDataDeleted': { he: 'כל הנתונים נמחקו', en: 'All data deleted', ru: 'Все данные удалены', ar: 'تم حذف كل البيانات' },
+
+  'err.requiredFields': { he: 'יש למלא את השדות החובה', en: 'Required fields must be filled', ru: 'Необходимо заполнить обязательные поля', ar: 'يجب ملء الحقول المطلوبة' },
+
+  'data.exportBtn': { he: 'ייצוא לאקסל', en: 'Export to Excel', ru: 'Экспорт в Excel', ar: 'تصدير إلى إكسل' },
+  'data.importBtn': { he: 'ייבוא מאקסל', en: 'Import from Excel', ru: 'Импорт из Excel', ar: 'استيراد من إكسل' },
+  'data.deleteAllBtn': { he: 'מחיקת כל הנתונים', en: 'Delete all data', ru: 'Удалить все данные', ar: 'حذف كل البيانات' },
+  'data.hint': { he: 'הנתונים נשמרים בדפדפן הזה בלבד. מומלץ לייצא גיבוי לאקסל מדי פעם.', en: 'Data is saved in this browser only. It\'s recommended to export a backup to Excel occasionally.', ru: 'Данные сохраняются только в этом браузере. Рекомендуется периодически экспортировать резервную копию в Excel.', ar: 'يتم حفظ البيانات في هذا المتصفح فقط. يُنصح بتصدير نسخة احتياطية إلى إكسل بين الحين والآخر.' },
+  'data.fileStatus': { he: '{n} רשומות · נשמר לאחרונה: {t}', en: '{n} records · last saved: {t}', ru: 'Записей: {n} · последнее сохранение: {t}', ar: '{n} سجلات · آخر حفظ: {t}' },
+  'data.fileStatusNever': { he: '{n} רשומות · טרם נשמר', en: '{n} records · never saved', ru: 'Записей: {n} · ещё не сохранено', ar: '{n} سجلات · لم يُحفظ بعد' },
+
+  'settings.title': { he: 'הגדרות', en: 'Settings', ru: 'Настройки', ar: 'الإعدادات' },
+  'settings.backupReminder.heading': { he: 'תזכורת גיבוי', en: 'Backup reminder', ru: 'Напоминание о резервной копии', ar: 'تذكير النسخ الاحتياطي' },
+  'settings.backupReminder.hint': { he: 'כשעובר הזמן שבחרתם בלי ייצוא לאקסל, נועם יזכיר לכם עם חלון קופץ. בדפדפנים מסוימים (למשל Safari באייפון) המידע המקומי עלול להימחק אחרי שבוע בלי שימוש, אלא אם שומרים קיצור דרך למסך הבית.', en: 'When the time you chose passes without exporting to Excel, Noam reminds you with a popup. Some browsers (e.g. iOS Safari) can delete local data after a week of inactivity unless the app is saved to the home screen.', ru: 'Когда проходит выбранное время без экспорта в Excel, Ноам напомнит вам всплывающим окном. Некоторые браузеры (например, Safari на iPhone) могут удалить локальные данные через неделю бездействия, если приложение не сохранено на главный экран.', ar: 'عندما يمر الوقت الذي اخترتموه دون تصدير إلى إكسل، سيذكركم نوعام بنافذة منبثقة. بعض المتصفحات (مثل Safari على آيفون) قد تحذف البيانات المحلية بعد أسبوع من عدم الاستخدام، ما لم يُحفظ التطبيق على الشاشة الرئيسية.' },
+  'settings.backupReminder.label': { he: 'תדירות התזכורת', en: 'Reminder frequency', ru: 'Частота напоминаний', ar: 'وتيرة التذكير' },
+  'settings.backupReminder.every5': { he: 'כל 5 דקות', en: 'Every 5 minutes', ru: 'Каждые 5 минут', ar: 'كل 5 دقائق' },
+  'settings.backupReminder.every10': { he: 'כל 10 דקות', en: 'Every 10 minutes', ru: 'Каждые 10 минут', ar: 'كل 10 دقائق' },
+  'settings.backupReminder.every15': { he: 'כל 15 דקות', en: 'Every 15 minutes', ru: 'Каждые 15 минут', ar: 'كل 15 دقيقة' },
+  'settings.backupReminder.every30': { he: 'כל 30 דקות', en: 'Every 30 minutes', ru: 'Каждые 30 минут', ar: 'كل 30 دقيقة' },
+  'settings.backupReminder.every60': { he: 'כל שעה', en: 'Every hour', ru: 'Каждый час', ar: 'كل ساعة' },
+  'settings.backupReminder.off': { he: 'בלי תזכורת', en: 'No reminder', ru: 'Без напоминания', ar: 'بدون تذكير' },
+  'backup.reminderTitle': { he: 'עדיין לא בוצע גיבוי', en: 'Backup not done yet', ru: 'Резервная копия ещё не создана', ar: 'لم يتم إجراء نسخة احتياطية بعد' },
+  'backup.reminderHint': { he: 'עבר הזמן שבחרתם בלי גיבוי עדכני. מומלץ לייצא גיבוי לאקסל מההגדרות.', en: 'The time you chose has passed without a fresh backup. Consider exporting a backup to Excel from Settings.', ru: 'Прошло выбранное вами время без свежей резервной копии. Рекомендуем экспортировать резервную копию в Excel в настройках.', ar: 'مرّ الوقت الذي اخترتموه دون نسخة احتياطية حديثة. يُنصح بتصدير نسخة احتياطية إلى إكسل من الإعدادات.' },
+  'backup.reminderFrequencyHint': { he: 'אפשר לשנות את תדירות התזכורת הזו בכל עת דרך חלון ההגדרות.', en: 'You can change this reminder\'s frequency any time from the settings window.', ru: 'Вы можете изменить частоту этого напоминания в любое время в окне настроек.', ar: 'يمكنكم تغيير وتيرة هذا التذكير في أي وقت من نافذة الإعدادات.' },
+
+  'help.title': { he: 'עזרה', en: 'Help', ru: 'Справка', ar: 'مساعدة' },
+  'help.whatTitle': { he: 'מה זה נועם?', en: 'What is Noam?', ru: 'Что такое Ноам?', ar: 'ما هو نوعام؟' },
+  'help.whatBody': { he: 'נועם הוא כלי לניהול פרויקטים — פרויקטים, משימות עם תת-משימות, הוצאות ואנשי קשר, הכל במקום אחד, ללא צורך בהתחברות או חשבון.', en: 'Noam is a project management tool - projects, tasks with subtasks, expenses and contacts, all in one place, no sign-in or account needed.', ru: 'Ноам — инструмент управления проектами: проекты, задачи с подзадачами, расходы и контакты — всё в одном месте, без входа в систему и без аккаунта.', ar: 'نوعام هو أداة لإدارة المشاريع — مشاريع ومهام مع مهام فرعية ومصروفات وجهات اتصال، كل ذلك في مكان واحد، دون الحاجة لتسجيل الدخول أو حساب.' },
+  'help.projectsTitle': { he: 'פרויקטים', en: 'Projects', ru: 'Проекты', ar: 'المشاريع' },
+  'help.projectsBody': { he: 'כל פרויקט כולל שם, תיאור, סטטוס, תאריכי התחלה/יעד ותקציב. הרצועה למעלה מאפשרת לסנן את המשימות, ההוצאות ואנשי הקשר לפי פרויקט נבחר בלחיצה על השבב שלו.', en: 'Each project has a name, description, status, start/due dates and budget. The strip at the top lets you filter tasks, expenses and contacts to a selected project by clicking its chip.', ru: 'У каждого проекта есть название, описание, статус, даты начала/окончания и бюджет. Полоса вверху позволяет фильтровать задачи, расходы и контакты по выбранному проекту, нажав на его чип.', ar: 'يحتوي كل مشروع على اسم ووصف وحالة وتواريخ بدء/استحقاق وميزانية. يتيح لكم الشريط أعلاه تصفية المهام والمصروفات وجهات الاتصال حسب مشروع محدد بالنقر على شريحته.' },
+  'help.tasksTitle': { he: 'משימות ותת-משימות', en: 'Tasks and subtasks', ru: 'Задачи и подзадачи', ar: 'المهام والمهام الفرعية' },
+  'help.tasksBody': { he: 'לכל משימה אפשר לשייך פרויקט, אחראי, תאריך יעד, עדיפות וסטטוס. לחיצה על כפתור תת-המשימות בטבלה פותחת רשימת צ\'קליסט קטנה בתוך המשימה.', en: 'Each task can be linked to a project, an assignee, a due date, priority and status. Clicking the subtasks button in the table opens a small checklist inside the task.', ru: 'Каждую задачу можно связать с проектом, ответственным, сроком, приоритетом и статусом. Нажатие кнопки подзадач в таблице открывает небольшой чек-лист внутри задачи.', ar: 'يمكن ربط كل مهمة بمشروع ومسؤول وتاريخ استحقاق وأولوية وحالة. النقر على زر المهام الفرعية في الجدول يفتح قائمة تحقق صغيرة داخل المهمة.' },
+  'help.expensesTitle': { he: 'הוצאות', en: 'Expenses', ru: 'Расходы', ar: 'المصروفات' },
+  'help.expensesBody': { he: 'הוצאות משויכות לפרויקט מסוימים, וטאב הסקירה מציג לכל פרויקט את התקציב מול הסכום שהוצא והיתרה שנותרה.', en: 'Expenses are linked to a specific project, and the Overview tab shows each project\'s budget versus the amount spent and the remaining balance.', ru: 'Расходы связаны с конкретным проектом, и вкладка «Обзор» показывает бюджет каждого проекта в сравнении с потраченной суммой и оставшимся балансом.', ar: 'ترتبط المصروفات بمشروع معين، وتعرض علامة تبويب النظرة العامة لكل مشروع الميزانية مقابل المبلغ المُنفق والرصيد المتبقي.' },
+  'help.contactsTitle': { he: 'אנשי קשר', en: 'Contacts', ru: 'Контакты', ar: 'جهات الاتصال' },
+  'help.contactsBody': { he: 'איש קשר יכול להיות משויך לפרויקט אחד, ואם הוא מעורב גם בפרויקט נוסף אפשר להשתמש בכפתור "העתקה לפרויקט אחר" כדי ליצור עבורו רשומה עצמאית נוספת.', en: 'A contact can be linked to one project, and if they\'re also involved in another project you can use the "Copy to another project" button to create an additional independent record for them.', ru: 'Контакт может быть связан с одним проектом, а если он также участвует в другом проекте, можно использовать кнопку «Копировать в другой проект», чтобы создать для него дополнительную независимую запись.', ar: 'يمكن ربط جهة الاتصال بمشروع واحد، وإذا كانت مشاركة أيضاً في مشروع آخر يمكن استخدام زر "نسخ إلى مشروع آخر" لإنشاء سجل مستقل إضافي لها.' },
+  'help.dataTitle': { he: 'שמירת נתונים וגיבוי', en: 'Data storage and backup', ru: 'Хранение данных и резервное копирование', ar: 'تخزين البيانات والنسخ الاحتياطي' },
+  'help.dataBody': { he: 'הנתונים נשמרים רק בדפדפן הזה, במכשיר הזה — אין שרת וללא חשבון. אם מנקים היסטוריית גלישה, עוברים למכשיר אחר, או לא פותחים את האתר במשך שבוע ב-Safari באייפון בלי לשמור קיצור דרך למסך הבית — המידע עלול להיעלם. מומלץ לייצא גיבוי לאקסל מדי פעם דרך ההגדרות, ולייבא אותו בחזרה במידת הצורך.', en: 'Data is saved only in this browser, on this device - no server, no account. If you clear browsing data, switch devices, or don\'t open the site for a week on iPhone Safari without saving it to the home screen, the data may be lost. It\'s recommended to export a backup to Excel occasionally via Settings, and import it back if needed.', ru: 'Данные сохраняются только в этом браузере, на этом устройстве — нет сервера, нет аккаунта. Если вы очистите данные браузера, смените устройство или не будете открывать сайт неделю в Safari на iPhone, не сохранив его на главный экран, данные могут быть потеряны. Рекомендуется периодически экспортировать резервную копию в Excel через настройки и импортировать её обратно при необходимости.', ar: 'يتم حفظ البيانات فقط في هذا المتصفح، على هذا الجهاز — لا يوجد خادم ولا حساب. إذا مسحتم بيانات التصفح، أو انتقلتم لجهاز آخر، أو لم تفتحوا الموقع لمدة أسبوع في Safari على آيفون دون حفظه على الشاشة الرئيسية — قد تُفقد البيانات. يُنصح بتصدير نسخة احتياطية إلى إكسل بين الحين والآخر من الإعدادات، واستيرادها مرة أخرى عند الحاجة.' }
+};
+
+let currentLang = localStorage.getItem('noam-lang') || 'he';
+
+function t(key, vars) {
+  const entry = I18N[key];
+  let s = entry ? (entry[currentLang] || entry.he) : key;
+  if (vars) for (const k in vars) s = s.replaceAll('{' + k + '}', vars[k]);
+  return s;
+}
+function applyI18nDom(root) {
+  const scope = root || document;
+  scope.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  scope.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  scope.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+}
+
+// --- Storage (own key, separate from YURI's) ---
+const STORE_KEY = 'noam-store-v1';
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* fall through to fresh store */ }
+  return { projects: [], tasks: [], expenses: [], contacts: [] };
+}
+function saveDB(s) {
+  s.savedAt = new Date().toISOString();
+  localStorage.setItem(STORE_KEY, JSON.stringify(s));
+}
+let db = loadDB();
+let projects = db.projects || [];
+let tasks = (db.tasks || []).map(x => ({ subtasks: [], ...x }));
+let expenses = db.expenses || [];
+let contacts = db.contacts || [];
+function persist() { saveDB({ projects, tasks, expenses, contacts }); }
+function nextId(arr) { return arr.reduce((max, e) => Math.max(max, Number(e.id) || 0), 0) + 1; }
+
+// --- CRUD ---
+function addProject(p) {
+  const rec = { id: nextId(projects), name: p.name, description: p.description || '', status: p.status || 'planning', startDate: p.startDate || '', dueDate: p.dueDate || '', budget: Number(p.budget) || 0, parentId: '' };
+  projects.push(rec); persist(); return rec;
+}
+function updateProject(id, p) {
+  const r = projects.find(x => String(x.id) === String(id));
+  if (!r) return;
+  const oldName = r.name;
+  Object.assign(r, { name: p.name, description: p.description || '', status: p.status, startDate: p.startDate || '', dueDate: p.dueDate || '', budget: Number(p.budget) || 0 });
+  // Renaming a project doesn't retroactively relink tasks/expenses/contacts
+  // that reference it by name (same fragile-by-name pattern as YURI) - so
+  // when the name actually changes, cascade it to keep existing links intact
+  // rather than silently orphaning them.
+  if (oldName !== r.name) {
+    tasks.forEach(x => { if (x.project === oldName) x.project = r.name; });
+    expenses.forEach(x => { if (x.project === oldName) x.project = r.name; });
+    contacts.forEach(x => { if (x.project === oldName) x.project = r.name; });
+  }
+  persist();
+}
+function deleteProject(id) {
+  projects = projects.filter(x => String(x.id) !== String(id));
+  persist();
+}
+
+function addTask(p) {
+  const rec = { id: nextId(tasks), name: p.name, project: p.project || '', assignee: p.assignee || '', dueDate: p.dueDate || '', priority: p.priority || 'normal', status: p.status || 'open', notes: p.notes || '', subtasks: [] };
+  tasks.push(rec); persist(); return rec;
+}
+function updateTask(id, p) {
+  const r = tasks.find(x => String(x.id) === String(id));
+  if (!r) return;
+  Object.assign(r, { name: p.name, project: p.project || '', assignee: p.assignee || '', dueDate: p.dueDate || '', priority: p.priority, status: p.status, notes: p.notes || '' });
+  persist();
+}
+function deleteTask(id) {
+  tasks = tasks.filter(x => String(x.id) !== String(id));
+  persist();
+}
+
+function addExpense(p) {
+  const rec = { id: nextId(expenses), date: p.date, project: p.project || '', description: p.description || '', amount: Number(p.amount) || 0 };
+  expenses.push(rec); persist(); return rec;
+}
+function updateExpense(id, p) {
+  const r = expenses.find(x => String(x.id) === String(id));
+  if (!r) return;
+  Object.assign(r, { date: p.date, project: p.project || '', description: p.description || '', amount: Number(p.amount) || 0 });
+  persist();
+}
+function deleteExpense(id) {
+  expenses = expenses.filter(x => String(x.id) !== String(id));
+  persist();
+}
+
+function addContact(p) {
+  const rec = { id: nextId(contacts), name: p.name, role: p.role || '', project: p.project || '', phone: p.phone || '', notes: p.notes || '' };
+  contacts.push(rec); persist(); return rec;
+}
+function updateContact(id, p) {
+  const r = contacts.find(x => String(x.id) === String(id));
+  if (!r) return;
+  Object.assign(r, { name: p.name, role: p.role || '', project: p.project || '', phone: p.phone || '', notes: p.notes || '' });
+  persist();
+}
+function deleteContact(id) {
+  contacts = contacts.filter(x => String(x.id) !== String(id));
+  persist();
+}
+
+// --- Formatting helpers ---
+const fmt = n => '₪' + Number(n).toLocaleString('he-IL', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+function fmtDate(dateInput) {
+  if (!dateInput) return '—';
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(d)) return '—';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${yy}`;
+}
+const pad2 = n => String(n).padStart(2, '0');
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function toast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = '', 3500);
+}
+function statusClass(kind, key) {
+  const map = {
+    status: { planning: 'st-planning', active: 'st-active', paused: 'st-paused', done: 'st-done' },
+    priority: { normal: 'st-normal', urgent: 'st-urgent', critical: 'st-critical' },
+    taskStatus: { open: 'st-open', inprogress: 'st-inprogress', done: 'st-done' }
+  };
+  return (map[kind] && map[kind][key]) || 'st-normal';
+}
+function enumLabel(kind, key) { return t('enum.' + kind + '.' + key); }
+// Reverse-lookup a translated enum label (from an imported Excel file, which
+// may have been exported in any of the 4 languages) back to its canonical key.
+function enumKeyFromLabel(kind, label, keys, fallback) {
+  for (const key of keys) {
+    for (const lang of LANG_ORDER) {
+      if (I18N['enum.' + kind + '.' + key][lang] === label) return key;
+    }
+  }
+  return fallback;
+}
+
+// --- Project filter (switcher strip) ---
+let projectsFilterId = '';
+function currentFilterProjectName() {
+  const p = projects.find(x => String(x.id) === projectsFilterId);
+  return p ? p.name : '';
+}
+
+// --- Rendering ---
+function renderApp() {
+  refreshProjectSelects();
+  renderProjectSwitcher();
+  renderOverview();
+  renderProjectsTable();
+  renderTasksTable();
+  renderExpensesTable();
+  renderContactsTable();
+  renderFileStatus();
+}
+
+function refreshProjectSelects() {
+  const opts = '<option value="">' + t('field.noProjectOpt') + '</option>' +
+    [...projects].sort((a, b) => a.name.localeCompare(b.name, 'he')).map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+  document.querySelectorAll('select.proj-select').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = opts;
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  });
+}
+
+function renderProjectSwitcher() {
+  const strip = document.getElementById('projSwitcherStrip');
+  if (!strip) return;
+  if (!projects.some(p => String(p.id) === projectsFilterId)) projectsFilterId = '';
+  const allChip = projects.length >= 2
+    ? `<button type="button" class="proj-chip proj-chip-all${projectsFilterId === '' ? ' active' : ''}" data-proj-id="">${t('switcher.allProjects')}</button>`
+    : '';
+  const projectChips = [...projects].sort((a, b) => b.id - a.id).map(p =>
+    `<button type="button" class="proj-chip${String(p.id) === projectsFilterId ? ' active' : ''}" data-proj-id="${p.id}" data-proj-name="${escapeHtml(p.name)}">
+      <span class="pname">${escapeHtml(p.name)}</span>
+      <span class="pstatus">${escapeHtml(enumLabel('status', p.status))}</span>
+    </button>`
+  ).join('');
+  const newChip = `<button type="button" class="proj-chip proj-chip-new" data-proj-new="1">+ ${t('switcher.newProject')}</button>`;
+  strip.innerHTML = allChip + projectChips + newChip;
+}
+
+function renderOverview() {
+  const selectedName = currentFilterProjectName();
+  const projList = projectsFilterId ? projects.filter(p => String(p.id) === projectsFilterId) : projects;
+  const taskList = selectedName ? tasks.filter(x => x.project === selectedName) : tasks;
+  const expList = selectedName ? expenses.filter(x => x.project === selectedName) : expenses;
+
+  const activeCount = projList.filter(p => p.status === 'active').length;
+  const openTasks = taskList.filter(x => x.status !== 'done').length;
+  const totalBudget = projList.reduce((s, p) => s + (Number(p.budget) || 0), 0);
+  const totalSpent = expList.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+  const remaining = totalBudget - totalSpent;
+
+  document.getElementById('overviewCards').innerHTML = `
+    <div class="card"><span class="cat-label">${t('overview.totalProjects')}</span><span class="amount">${projList.length}</span></div>
+    <div class="card"><span class="cat-label">${t('overview.activeProjects')}</span><span class="amount">${activeCount}</span></div>
+    <div class="card"><span class="cat-label">${t('overview.openTasks')}</span><span class="amount">${openTasks}</span></div>
+    <div class="card"><span class="cat-label">${t('overview.totalBudget')}</span><span class="amount">${fmt(totalBudget)}</span></div>
+    <div class="card"><span class="cat-label">${t('overview.totalSpent')}</span><span class="amount amount-out">${fmt(totalSpent)}</span></div>
+    <div class="card total"><span class="cat-label">${t('overview.remainingBudget')}</span><span class="amount${remaining < 0 ? ' neg' : ''}">${fmt(remaining)}</span></div>`;
+
+  const rows = [...projList].sort((a, b) => b.id - a.id);
+  document.getElementById('overviewEmpty').hidden = rows.length > 0;
+  document.getElementById('overviewBody').innerHTML = rows.map(p => {
+    const spent = expenses.filter(r => r.project === p.name).reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const budget = Number(p.budget) || 0;
+    const left = budget - spent;
+    const openForProject = tasks.filter(x => x.project === p.name && x.status !== 'done').length;
+    return `<tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td><span class="type-badge ${statusClass('status', p.status)}">${escapeHtml(enumLabel('status', p.status))}</span></td>
+      <td class="num">${fmt(budget)}</td>
+      <td class="num amount-out">${fmt(spent)}</td>
+      <td class="num${left < 0 ? ' amount-out' : ''}">${fmt(left)}</td>
+      <td class="num">${openForProject}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderProjectsTable() {
+  const rows = [...projects].sort((a, b) => b.id - a.id);
+  document.getElementById('projectsEmpty').hidden = rows.length > 0;
+  document.getElementById('projectsBody').innerHTML = rows.map(p => `<tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td><span class="type-badge ${statusClass('status', p.status)}">${escapeHtml(enumLabel('status', p.status))}</span></td>
+      <td>${fmtDate(p.startDate)}</td>
+      <td>${fmtDate(p.dueDate)}</td>
+      <td class="num">${fmt(p.budget)}</td>
+      <td class="actions-cell">
+        <button type="button" class="btn-edit" data-edit-project="${p.id}">${t('common.edit')}</button>
+        <button type="button" class="btn-danger" data-del-project="${p.id}">${t('common.delete')}</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderTasksTable() {
+  const selectedName = currentFilterProjectName();
+  const rows = [...(selectedName ? tasks.filter(x => x.project === selectedName) : tasks)].sort((a, b) => b.id - a.id);
+  document.getElementById('tasksEmpty').hidden = rows.length > 0;
+  document.getElementById('tasksBody').innerHTML = rows.map(x => {
+    const subs = x.subtasks || [];
+    const doneCount = subs.filter(s => s.done).length;
+    return `<tr>
+      <td>${escapeHtml(x.name)}</td>
+      <td>${escapeHtml(x.project || '—')}</td>
+      <td>${escapeHtml(x.assignee || '—')}</td>
+      <td>${fmtDate(x.dueDate)}</td>
+      <td><span class="type-badge ${statusClass('priority', x.priority)}">${escapeHtml(enumLabel('priority', x.priority))}</span></td>
+      <td><span class="type-badge ${statusClass('taskStatus', x.status)}">${escapeHtml(enumLabel('taskStatus', x.status))}</span></td>
+      <td><button type="button" class="btn-ghost subtasks-btn" data-open-subtasks="${x.id}">${subs.length ? `${doneCount}/${subs.length}` : '+'} </button></td>
+      <td class="actions-cell">
+        <button type="button" class="btn-edit" data-edit-task="${x.id}">${t('common.edit')}</button>
+        <button type="button" class="btn-danger" data-del-task="${x.id}">${t('common.delete')}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderExpensesTable() {
+  const selectedName = currentFilterProjectName();
+  const rows = [...(selectedName ? expenses.filter(x => x.project === selectedName) : expenses)].sort((a, b) => a.date === b.date ? b.id - a.id : (a.date > b.date ? -1 : 1));
+  document.getElementById('expensesEmpty').hidden = rows.length > 0;
+  document.getElementById('expensesBody').innerHTML = rows.map(x => `<tr>
+      <td>${fmtDate(x.date)}</td>
+      <td>${escapeHtml(x.project || '—')}</td>
+      <td>${escapeHtml(x.description)}</td>
+      <td class="num amount-out">${fmt(x.amount)}</td>
+      <td class="actions-cell">
+        <button type="button" class="btn-edit" data-edit-expense="${x.id}">${t('common.edit')}</button>
+        <button type="button" class="btn-danger" data-del-expense="${x.id}">${t('common.delete')}</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderContactsTable() {
+  const selectedName = currentFilterProjectName();
+  const rows = [...(selectedName ? contacts.filter(x => x.project === selectedName) : contacts)].sort((a, b) => b.id - a.id);
+  document.getElementById('contactsEmpty').hidden = rows.length > 0;
+  document.getElementById('contactsBody').innerHTML = rows.map(x => `<tr>
+      <td>${escapeHtml(x.name)}</td>
+      <td>${escapeHtml(x.role || '—')}</td>
+      <td>${escapeHtml(x.project || '—')}</td>
+      <td dir="ltr">${escapeHtml(x.phone || '—')}</td>
+      <td class="actions-cell">
+        <button type="button" class="btn-edit" data-edit-contact="${x.id}">${t('common.edit')}</button>
+        <button type="button" class="btn-ghost" data-copy-contact="${x.id}">${t('contacts.copyBtnLabel')}</button>
+        <button type="button" class="btn-danger" data-del-contact="${x.id}">${t('common.delete')}</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderFileStatus() {
+  const el = document.getElementById('fileStatus');
+  if (!el) return;
+  const d = loadDB();
+  const n = projects.length + tasks.length + expenses.length + contacts.length;
+  el.textContent = d.savedAt
+    ? t('data.fileStatus', { n, t: fmtDateTime(d.savedAt) })
+    : t('data.fileStatusNever', { n });
+}
+function fmtDateTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${fmtDate(d)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// --- Generic form wiring for the 4 simple entities (projects/tasks/expenses/contacts) ---
+function wireEntityForm(formId, { add, update, onSubmitted }) {
+  const form = document.getElementById(formId);
+  const submitBtn = form.querySelector('[type=submit]');
+  form.addEventListener('submit', ev => {
+    ev.preventDefault();
+    const payload = {};
+    form.querySelectorAll('[data-f]').forEach(el => { payload[el.dataset.f] = el.value; });
+    const requiredOk = [...form.querySelectorAll('[data-f][required]')].every(el => el.value !== '');
+    if (!requiredOk) { toast(t('err.requiredFields'), true); return; }
+    const editId = form.dataset.editing;
+    if (editId) {
+      update(editId, payload);
+      delete form.dataset.editing;
+      submitBtn.textContent = t('common.add');
+      toast(t('toast.updated'));
+    } else {
+      add(payload);
+      toast(t('toast.added'));
+    }
+    form.reset();
+    onSubmitted();
+    renderApp();
+  });
+}
+function loadRecordIntoForm(formId, rec) {
+  const form = document.getElementById(formId);
+  form.querySelectorAll('[data-f]').forEach(el => { el.value = rec[el.dataset.f] ?? ''; });
+  form.dataset.editing = rec.id;
+  form.querySelector('[type=submit]').textContent = t('common.update');
+  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// --- Subtasks dialog ---
+let currentSubtaskTaskId = null;
+function openSubtasksDialog(taskId) {
+  currentSubtaskTaskId = String(taskId);
+  const task = tasks.find(x => String(x.id) === currentSubtaskTaskId);
+  if (!task) return;
+  document.getElementById('subtasksTitle').textContent = t('subtasks.title') + ' — ' + task.name;
+  document.getElementById('subtaskInput').value = '';
+  renderSubtasksList(task);
+  document.getElementById('subtasksDialog').showModal();
+}
+function renderSubtasksList(task) {
+  const subs = task.subtasks || [];
+  const body = document.getElementById('subtasksList');
+  if (!subs.length) { body.innerHTML = `<p class="file-hint">${t('subtasks.emptyMsg')}</p>`; return; }
+  body.innerHTML = subs.map(s => `<div class="subtask-row${s.done ? ' done' : ''}">
+      <input type="checkbox" data-toggle-sub="${s.id}" ${s.done ? 'checked' : ''}>
+      <span>${escapeHtml(s.text)}</span>
+      <button type="button" data-del-sub="${s.id}" title="${t('common.delete')}">✕</button>
+    </div>`).join('');
+}
+function persistSubtasks(taskId, subtasks) {
+  const r = tasks.find(x => String(x.id) === String(taskId));
+  if (!r) return;
+  r.subtasks = subtasks;
+  persist();
+  renderSubtasksList(r);
+  renderTasksTable();
+}
+function addSubtask() {
+  const input = document.getElementById('subtaskInput');
+  const text = input.value.trim();
+  if (!text || !currentSubtaskTaskId) return;
+  const task = tasks.find(x => String(x.id) === currentSubtaskTaskId);
+  if (!task) return;
+  const subs = task.subtasks || [];
+  const nid = subs.reduce((m, s) => Math.max(m, Number(s.id) || 0), 0) + 1;
+  persistSubtasks(currentSubtaskTaskId, [...subs, { id: nid, text, done: false }]);
+  input.value = '';
+}
+function toggleSubtask(subId) {
+  const task = tasks.find(x => String(x.id) === currentSubtaskTaskId);
+  if (!task) return;
+  const subs = (task.subtasks || []).map(s => String(s.id) === String(subId) ? { ...s, done: !s.done } : s);
+  persistSubtasks(currentSubtaskTaskId, subs);
+}
+function deleteSubtask(subId) {
+  const task = tasks.find(x => String(x.id) === currentSubtaskTaskId);
+  if (!task) return;
+  const subs = (task.subtasks || []).filter(s => String(s.id) !== String(subId));
+  persistSubtasks(currentSubtaskTaskId, subs);
+}
+
+// --- Copy contact to another project (creates an independent new record) ---
+function openCopyContactDialog(contactId) {
+  const contact = contacts.find(c => String(c.id) === String(contactId));
+  if (!contact) return;
+  const others = projects.filter(p => p.name !== contact.project);
+  if (!others.length) { toast(t('contacts.copyNoOtherProjects'), true); return; }
+  const dlg = document.getElementById('copyContactDialog');
+  dlg.dataset.contactId = contactId;
+  document.getElementById('copyContactName').textContent = contact.name;
+  const sel = document.getElementById('copyContactProjectSelect');
+  sel.innerHTML = others.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+  dlg.showModal();
+}
+function copyContactToProject() {
+  const dlg = document.getElementById('copyContactDialog');
+  const contact = contacts.find(c => String(c.id) === String(dlg.dataset.contactId));
+  if (!contact) return;
+  const targetProject = document.getElementById('copyContactProjectSelect').value;
+  addContact({ name: contact.name, role: contact.role, project: targetProject, phone: contact.phone, notes: contact.notes });
+  dlg.close();
+  toast(t('contacts.copyDone'));
+  renderApp();
+}
+
+// --- Theme / language ---
+function applyTheme(theme) {
+  if (theme === 'light') document.documentElement.dataset.theme = 'light';
+  else delete document.documentElement.dataset.theme;
+  localStorage.setItem('noam-theme', theme);
+}
+function applyLang(lang, rerender) {
+  currentLang = LANG_ORDER.includes(lang) ? lang : 'he';
+  localStorage.setItem('noam-lang', currentLang);
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = RTL_LANGS.includes(currentLang) ? 'rtl' : 'ltr';
+  document.body.classList.toggle('lang-ar', currentLang === 'ar');
+  document.getElementById('langCode').textContent = { he: 'עב', en: 'EN', ru: 'RU', ar: 'AR' }[currentLang];
+  document.querySelectorAll('.lang-item').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+  applyI18nDom();
+  if (rerender) renderApp();
+}
+
+// --- Excel export / import (4 sheets; subtasks included - fixes a real YURI bug where they were silently dropped) ---
+const SHEET_MATCH = {
+  projects: /פרויקט|project|проект|مشروع/i,
+  tasks: /משימ|task|задач|مهام|مهمة/i,
+  expenses: /הוצא|expense|расход|مصروف/i,
+  contacts: /קשר|contact|контакт|اتصال|جهة/i
+};
+function exportXlsx() {
+  const wb = XLSX.utils.book_new();
+
+  const projHeader = ['id', t('field.name'), t('field.description'), t('field.status'), t('field.startDate'), t('field.dueDate'), t('field.budget')];
+  const projRows = projects.map(p => [p.id, p.name, p.description, enumLabel('status', p.status), p.startDate, p.dueDate, p.budget]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([projHeader, ...projRows]), t('nav.tabProjects'));
+
+  const taskHeader = ['id', t('field.name'), t('field.project'), t('field.assignee'), t('field.dueDate'), t('field.priority'), t('field.status'), t('field.notes'), t('tasks.subtasksCol')];
+  const taskRows = tasks.map(x => [x.id, x.name, x.project, x.assignee, x.dueDate, enumLabel('priority', x.priority), enumLabel('taskStatus', x.status), x.notes, JSON.stringify(x.subtasks || [])]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([taskHeader, ...taskRows]), t('nav.tabTasks'));
+
+  const expHeader = ['id', t('field.date'), t('field.project'), t('field.description'), t('field.amount')];
+  const expRows = expenses.map(x => [x.id, x.date, x.project, x.description, x.amount]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([expHeader, ...expRows]), t('nav.tabExpenses'));
+
+  const contHeader = ['id', t('field.name'), t('field.role'), t('field.project'), t('field.phone'), t('field.notes')];
+  const contRows = contacts.map(x => [x.id, x.name, x.role, x.project, x.phone, x.notes]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([contHeader, ...contRows]), t('nav.tabContacts'));
+
+  XLSX.writeFile(wb, 'noam.xlsx');
+  recordBackupNow();
+  toast(t('toast.exported'));
+}
+function sheetRows(wb, kind) {
+  const name = wb.SheetNames.find(n => SHEET_MATCH[kind].test(n));
+  if (!name) return [];
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1 });
+  return rows.slice(1).filter(r => r && r.length && r[1] !== undefined && r[1] !== '');
+}
+function asDateStr(v) { return v instanceof Date ? v.toISOString().slice(0, 10) : String(v || ''); }
+function importXlsxFromArrayBuffer(buf) {
+  const wb = XLSX.read(buf, { type: 'array' });
+
+  const projRows = sheetRows(wb, 'projects');
+  if (projRows.length) {
+    projects = projRows.map((r, i) => ({
+      id: Number(r[0]) || (i + 1), name: r[1] || '', description: r[2] || '',
+      status: enumKeyFromLabel('status', r[3], ['planning', 'active', 'paused', 'done'], 'planning'),
+      startDate: asDateStr(r[4]), dueDate: asDateStr(r[5]), budget: Number(r[6]) || 0, parentId: ''
+    }));
+  }
+  const taskRows = sheetRows(wb, 'tasks');
+  if (taskRows.length) {
+    tasks = taskRows.map((r, i) => {
+      let subs = [];
+      try { subs = JSON.parse(r[8] || '[]'); } catch (e) { subs = []; }
+      return {
+        id: Number(r[0]) || (i + 1), name: r[1] || '', project: r[2] || '', assignee: r[3] || '',
+        dueDate: asDateStr(r[4]),
+        priority: enumKeyFromLabel('priority', r[5], ['normal', 'urgent', 'critical'], 'normal'),
+        status: enumKeyFromLabel('taskStatus', r[6], ['open', 'inprogress', 'done'], 'open'),
+        notes: r[7] || '', subtasks: Array.isArray(subs) ? subs : []
+      };
+    });
+  }
+  const expRows = sheetRows(wb, 'expenses');
+  if (expRows.length) {
+    expenses = expRows.map((r, i) => ({ id: Number(r[0]) || (i + 1), date: asDateStr(r[1]), project: r[2] || '', description: r[3] || '', amount: Number(r[4]) || 0 }));
+  }
+  const contRows = sheetRows(wb, 'contacts');
+  if (contRows.length) {
+    contacts = contRows.map((r, i) => ({ id: Number(r[0]) || (i + 1), name: r[1] || '', role: r[2] || '', project: r[3] || '', phone: r[4] || '', notes: r[5] || '' }));
+  }
+
+  persist();
+  recordBackupNow();
+  toast(t('toast.imported'));
+  renderApp();
+}
+
+// --- Backup reminder (tracks Excel exports, not just localStorage saves) ---
+const BACKUP_CLOCK_KEY = 'noam-last-backup-time';
+const BACKUP_REMINDER_INTERVAL_KEY = 'noam-backup-reminder-interval-min';
+function getBackupReminderIntervalMin() {
+  const v = localStorage.getItem(BACKUP_REMINDER_INTERVAL_KEY);
+  if (v === 'off') return 0;
+  const n = Number(v);
+  return [5, 10, 15, 30, 60].includes(n) ? n : 10;
+}
+function recordBackupNow() {
+  localStorage.setItem(BACKUP_CLOCK_KEY, new Date().toISOString());
+  updateBackupClock();
+}
+function getLastBackupTime() {
+  const v = localStorage.getItem(BACKUP_CLOCK_KEY);
+  return v ? new Date(v) : null;
+}
+function updateBackupClock() {
+  const btn = document.getElementById('backupClock');
+  if (!btn) return;
+  const last = getLastBackupTime();
+  if (!last) { btn.title = t('header.backupClockNever'); btn.classList.add('is-stale'); return; }
+  const elapsedSec = Math.max(0, Math.floor((Date.now() - last.getTime()) / 1000));
+  const pad = n => String(n).padStart(2, '0');
+  const timeStr = `${pad(Math.floor(elapsedSec / 3600))}:${pad(Math.floor((elapsedSec % 3600) / 60))}:${pad(elapsedSec % 60)}`;
+  btn.title = `${t('header.backupClockTitle')}: ${timeStr}`;
+  const intervalMin = getBackupReminderIntervalMin();
+  btn.classList.toggle('is-stale', intervalMin > 0 && elapsedSec >= intervalMin * 60);
+}
+setInterval(updateBackupClock, 1000);
+function checkBackupReminder() {
+  const last = getLastBackupTime();
+  const dlg = document.getElementById('backupReminderDialog');
+  if (!dlg || dlg.open) return;
+  const intervalMin = getBackupReminderIntervalMin();
+  if (!intervalMin) return;
+  if (!last || Date.now() - last.getTime() >= intervalMin * 60 * 1000) dlg.showModal();
+}
+let backupReminderTimer = null;
+let backupReminderFirstCheckTimer = null;
+const BACKUP_REMINDER_FIRST_CHECK_MS = 60 * 1000;
+function restartBackupReminderTimer() {
+  if (backupReminderTimer) clearInterval(backupReminderTimer);
+  if (backupReminderFirstCheckTimer) clearTimeout(backupReminderFirstCheckTimer);
+  backupReminderTimer = null;
+  backupReminderFirstCheckTimer = null;
+  const intervalMin = getBackupReminderIntervalMin();
+  if (!intervalMin) return;
+  backupReminderFirstCheckTimer = setTimeout(checkBackupReminder, Math.min(BACKUP_REMINDER_FIRST_CHECK_MS, intervalMin * 60 * 1000));
+  backupReminderTimer = setInterval(checkBackupReminder, intervalMin * 60 * 1000);
+}
+
+// --- Drag-to-scroll for the project switcher strip ---
+function wireDragToScroll(el) {
+  if (!el) return;
+  let isDown = false, startX = 0, scrollLeft = 0;
+  el.addEventListener('mousedown', ev => { isDown = true; el.classList.add('dragging'); startX = ev.pageX; scrollLeft = el.scrollLeft; });
+  el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mouseup', () => { isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mousemove', ev => {
+    if (!isDown) return;
+    ev.preventDefault();
+    el.scrollLeft = scrollLeft - (ev.pageX - startX);
+  });
+}
+
+function wireBackdropClose(dialog) {
+  dialog.addEventListener('click', ev => {
+    const r = dialog.getBoundingClientRect();
+    const inside = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+    if (!inside) dialog.close();
+  });
+}
+
+// --- Init ---
+function init() {
+  applyTheme(localStorage.getItem('noam-theme') === 'light' ? 'light' : 'dark');
+  applyLang(currentLang, false);
+  applyI18nDom();
+
+  wireEntityForm('projectForm', { add: addProject, update: updateProject, onSubmitted: () => {} });
+  wireEntityForm('taskForm', { add: addTask, update: updateTask, onSubmitted: () => {} });
+  wireEntityForm('expenseForm', { add: addExpense, update: updateExpense, onSubmitted: () => {} });
+  wireEntityForm('contactForm', { add: addContact, update: updateContact, onSubmitted: () => {} });
+
+  renderApp();
+
+  // Tabs
+  const tabs = document.getElementById('mainTabs');
+  tabs.addEventListener('click', ev => {
+    const btn = ev.target.closest('.tab');
+    if (!btn) return;
+    tabs.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.dataset.panel !== btn.dataset.tab; });
+  });
+
+  // Project switcher
+  wireDragToScroll(document.getElementById('projSwitcherStrip'));
+  document.getElementById('projSwitcherStrip').addEventListener('click', ev => {
+    const chip = ev.target.closest('.proj-chip');
+    if (!chip) return;
+    if (chip.dataset.projNew) {
+      document.querySelector('#mainTabs [data-tab="projects"]').click();
+      document.querySelector('#projectForm [data-f="name"]').focus();
+      return;
+    }
+    projectsFilterId = chip.dataset.projId || '';
+    ['taskForm', 'expenseForm', 'contactForm'].forEach(id => {
+      const sel = document.querySelector(`#${id} [data-f="project"]`);
+      if (sel) sel.value = chip.dataset.projName || '';
+    });
+    renderApp();
+  });
+
+  // Table row actions (edit/delete/subtasks/copy) - delegated per table body
+  document.getElementById('projectsBody').addEventListener('click', ev => {
+    const editId = ev.target.dataset.editProject, delId = ev.target.dataset.delProject;
+    if (editId) loadRecordIntoForm('projectForm', projects.find(x => String(x.id) === editId));
+    if (delId) { if (!confirm(t('confirm.deleteProject'))) return; deleteProject(delId); toast(t('toast.deleted')); renderApp(); }
+  });
+  document.getElementById('tasksBody').addEventListener('click', ev => {
+    const editId = ev.target.dataset.editTask, delId = ev.target.dataset.delTask, subId = ev.target.dataset.openSubtasks;
+    if (editId) loadRecordIntoForm('taskForm', tasks.find(x => String(x.id) === editId));
+    if (delId) { if (!confirm(t('confirm.deleteTask'))) return; deleteTask(delId); toast(t('toast.deleted')); renderApp(); }
+    if (subId) openSubtasksDialog(subId);
+  });
+  document.getElementById('expensesBody').addEventListener('click', ev => {
+    const editId = ev.target.dataset.editExpense, delId = ev.target.dataset.delExpense;
+    if (editId) loadRecordIntoForm('expenseForm', expenses.find(x => String(x.id) === editId));
+    if (delId) { if (!confirm(t('confirm.deleteExpense'))) return; deleteExpense(delId); toast(t('toast.deleted')); renderApp(); }
+  });
+  document.getElementById('contactsBody').addEventListener('click', ev => {
+    const editId = ev.target.dataset.editContact, delId = ev.target.dataset.delContact, copyId = ev.target.dataset.copyContact;
+    if (editId) loadRecordIntoForm('contactForm', contacts.find(x => String(x.id) === editId));
+    if (delId) { if (!confirm(t('confirm.deleteContact'))) return; deleteContact(delId); toast(t('toast.deleted')); renderApp(); }
+    if (copyId) openCopyContactDialog(copyId);
+  });
+
+  // Subtasks dialog
+  const subtasksDialog = document.getElementById('subtasksDialog');
+  document.getElementById('addSubtaskBtn').addEventListener('click', addSubtask);
+  document.getElementById('subtaskInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); addSubtask(); } });
+  document.getElementById('subtasksList').addEventListener('click', ev => {
+    const toggleId = ev.target.dataset.toggleSub, delId = ev.target.dataset.delSub;
+    if (toggleId) toggleSubtask(toggleId);
+    if (delId) deleteSubtask(delId);
+  });
+  document.getElementById('closeSubtasks').addEventListener('click', () => subtasksDialog.close());
+
+  // Copy contact dialog
+  document.getElementById('copyContactConfirmBtn').addEventListener('click', copyContactToProject);
+  document.getElementById('copyContactCancelBtn').addEventListener('click', () => document.getElementById('copyContactDialog').close());
+
+  // Theme / language
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+  });
+  const langToggle = document.getElementById('langToggle');
+  const langMenu = document.getElementById('langMenu');
+  langToggle.addEventListener('click', () => {
+    const willOpen = langMenu.hidden;
+    langMenu.hidden = !willOpen;
+    langToggle.setAttribute('aria-expanded', String(willOpen));
+  });
+  document.addEventListener('click', ev => {
+    if (!langMenu.hidden && !ev.target.closest('.lang-wrap')) { langMenu.hidden = true; langToggle.setAttribute('aria-expanded', 'false'); }
+  });
+  langMenu.addEventListener('click', ev => {
+    const b = ev.target.closest('.lang-item');
+    if (!b) return;
+    applyLang(b.dataset.lang, true);
+    langMenu.hidden = true;
+    langToggle.setAttribute('aria-expanded', 'false');
+  });
+
+  // Print
+  document.getElementById('printBtn').addEventListener('click', () => {
+    document.getElementById('printDate').textContent = fmtDateTime(new Date().toISOString());
+    window.print();
+  });
+
+  // Settings / data
+  const settingsDialog = document.getElementById('settingsDialog');
+  document.getElementById('settingsBtn').addEventListener('click', () => { renderFileStatus(); settingsDialog.showModal(); });
+  document.getElementById('closeSettings').addEventListener('click', () => settingsDialog.close());
+  document.getElementById('exportBtn').addEventListener('click', exportXlsx);
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', ev => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { try { importXlsxFromArrayBuffer(e.target.result); } catch (err) { toast(err.message, true); } };
+    reader.readAsArrayBuffer(file);
+    fileInput.value = '';
+  });
+  document.getElementById('deleteAllBtn').addEventListener('click', () => {
+    if (!confirm(t('confirm.deleteAllData'))) return;
+    projects = []; tasks = []; expenses = []; contacts = [];
+    persist();
+    toast(t('toast.allDataDeleted'));
+    renderApp();
+  });
+
+  // Help
+  const helpDialog = document.getElementById('helpDialog');
+  document.getElementById('helpBtn').addEventListener('click', () => helpDialog.showModal());
+  document.getElementById('closeHelp').addEventListener('click', () => helpDialog.close());
+
+  // Backup reminder
+  updateBackupClock();
+  restartBackupReminderTimer();
+  document.getElementById('backupClock').addEventListener('click', () => { renderFileStatus(); settingsDialog.showModal(); });
+  const backupReminderIntervalSelect = document.getElementById('backupReminderInterval');
+  backupReminderIntervalSelect.value = localStorage.getItem(BACKUP_REMINDER_INTERVAL_KEY) || '10';
+  backupReminderIntervalSelect.addEventListener('change', () => {
+    localStorage.setItem(BACKUP_REMINDER_INTERVAL_KEY, backupReminderIntervalSelect.value);
+    restartBackupReminderTimer();
+    updateBackupClock();
+  });
+  const backupReminderDialog = document.getElementById('backupReminderDialog');
+  document.getElementById('closeBackupReminder').addEventListener('click', () => backupReminderDialog.close());
+  document.getElementById('openSettingsFromBackupReminder').addEventListener('click', () => {
+    backupReminderDialog.close();
+    renderFileStatus();
+    settingsDialog.showModal();
+  });
+
+  [settingsDialog, helpDialog, backupReminderDialog, subtasksDialog, document.getElementById('copyContactDialog')].forEach(wireBackdropClose);
+}
+init();
+</script>
+</body>
+</html>
