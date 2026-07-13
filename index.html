@@ -157,6 +157,43 @@
   .subtask-add-row input { flex: 1; }
   .subtasks-btn { display: inline-flex; align-items: center; gap: 4px; }
 
+  /* Tasks view toggle + Kanban board */
+  .tasks-view-toggle-btn { margin-inline-start: auto; align-self: center; min-height: 36px; padding: 5px 16px; font-size: 13px; }
+  .tasks-view-toggle-btn[hidden] { display: none; }
+  .kanban-board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
+  .kanban-col { flex: 1 1 260px; min-width: 240px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 10px; }
+  .kanban-col.drag-over { border-color: var(--color-secondary); background: rgba(59,130,246,0.06); }
+  .kanban-col-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; font-weight: 600; font-size: 14px; }
+  .kanban-col-count { background: var(--color-muted); color: var(--color-text-dim); border-radius: 999px; padding: 1px 9px; font-size: 12px; }
+  .kanban-cards { display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+  .kanban-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; padding: 10px 12px; cursor: grab; font-size: 13px; }
+  .kanban-card:active { cursor: grabbing; }
+  .kanban-card.dragging { opacity: 0.4; }
+  .kanban-card-title { font-weight: 600; margin-bottom: 4px; color: var(--color-fg); }
+  .kanban-card-meta { color: var(--color-text-dim); font-size: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+  .kanban-card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .kanban-move-btn { background: var(--color-muted); border: none; border-radius: 6px; width: 24px; height: 24px; cursor: pointer; color: var(--color-fg); }
+  .kanban-move-btn:disabled { opacity: 0.3; cursor: default; }
+  .kanban-card-overdue { color: #F87171; }
+  [data-theme="light"] .kanban-card-overdue { color: #DC2626; }
+
+  /* Overview timeline (Gantt) */
+  .gantt-wrap { overflow-x: auto; }
+  .gantt-grid { position: relative; height: 24px; border-bottom: 1px solid var(--color-border); min-width: 640px; }
+  .gantt-gridline { position: absolute; top: 0; bottom: -4000px; border-inline-start: 1px dashed var(--color-border); }
+  .gantt-gridline span { position: absolute; top: 0; inset-inline-start: 4px; font-size: 11px; color: var(--color-text-dim); white-space: nowrap; }
+  .gantt-today { position: absolute; top: 0; bottom: -4000px; border-inline-start: 2px solid var(--color-secondary); z-index: 1; }
+  .gantt-rows { min-width: 640px; position: relative; }
+  .gantt-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--color-border); }
+  .gantt-label { flex: 0 0 140px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gantt-track { position: relative; flex: 1; height: 22px; }
+  .gantt-bar { position: absolute; top: 0; height: 22px; border-radius: 6px; background: var(--color-muted); display: flex; align-items: center; overflow: hidden; }
+  .gantt-bar span { font-size: 11px; padding-inline-start: 8px; white-space: nowrap; color: inherit; }
+  .gantt-bar.st-active { background: rgba(5,150,105,0.35); }
+  .gantt-bar.st-planning { background: rgba(59,130,246,0.35); }
+  .gantt-bar.st-paused { background: rgba(245,158,11,0.35); }
+  .gantt-bar.st-done { background: var(--color-muted); }
+
   #toast { position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); background: var(--color-accent); color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 250ms ease-out; z-index: 100; }
   #toast.show { opacity: 1; }
   #toast.error { background: var(--color-destructive); }
@@ -283,11 +320,16 @@
     <button type="button" class="tab" data-tab="tasks" data-i18n="nav.tabTasks">משימות</button>
     <button type="button" class="tab" data-tab="expenses" data-i18n="nav.tabExpenses">הוצאות</button>
     <button type="button" class="tab" data-tab="contacts" data-i18n="nav.tabContacts">אנשי קשר</button>
+    <button type="button" class="btn-edit tasks-view-toggle-btn" id="tasksViewToggleBtn" hidden data-i18n="projects.viewKanban">Kanban</button>
   </div>
 
   <!-- Overview -->
   <div class="tab-panel" data-panel="overview">
     <section class="cards" id="overviewCards"></section>
+    <section class="panel" style="margin-bottom:24px" id="overview-timeline-section">
+      <h2 data-i18n="overview.timelineTitle">ציר זמן</h2>
+      <div id="overview-timeline"></div>
+    </section>
     <section class="panel">
       <h2 data-i18n="overview.statusTableTitle">סטטוס פרויקטים</h2>
       <div class="table-wrap">
@@ -370,23 +412,26 @@
         <button type="submit" class="btn-primary" data-i18n="common.add">הוספה</button>
       </form>
     </section>
-    <section class="panel">
-      <h2 data-i18n="tasks.listTitle">כל המשימות</h2>
-      <div class="table-wrap">
-        <table><thead><tr>
-          <th data-i18n="field.name">שם</th>
-          <th data-i18n="field.project">פרויקט</th>
-          <th data-i18n="field.assignee">אחראי</th>
-          <th data-i18n="field.dueDate">יעד</th>
-          <th data-i18n="field.priority">דחיפות</th>
-          <th data-i18n="field.status">סטטוס</th>
-          <th data-i18n="tasks.subtasksCol">תת-משימות</th>
-          <th data-i18n="common.actions">פעולות</th>
-        </tr></thead>
-        <tbody id="tasksBody"></tbody></table>
-        <div class="empty" id="tasksEmpty" data-i18n="tasks.emptyMsg" hidden>אין עדיין משימות. הוסיפו את הראשונה למעלה.</div>
-      </div>
-    </section>
+    <div id="tasksListWrap">
+      <section class="panel">
+        <h2 data-i18n="tasks.listTitle">כל המשימות</h2>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th data-i18n="field.name">שם</th>
+            <th data-i18n="field.project">פרויקט</th>
+            <th data-i18n="field.assignee">אחראי</th>
+            <th data-i18n="field.dueDate">יעד</th>
+            <th data-i18n="field.priority">דחיפות</th>
+            <th data-i18n="field.status">סטטוס</th>
+            <th data-i18n="tasks.subtasksCol">תת-משימות</th>
+            <th data-i18n="common.actions">פעולות</th>
+          </tr></thead>
+          <tbody id="tasksBody"></tbody></table>
+          <div class="empty" id="tasksEmpty" data-i18n="tasks.emptyMsg" hidden>אין עדיין משימות. הוסיפו את הראשונה למעלה.</div>
+        </div>
+      </section>
+    </div>
+    <div id="tasksKanbanWrap" hidden><div class="kanban-board" id="tasksKanbanBoard"></div></div>
   </div>
 
   <!-- Expenses -->
@@ -465,10 +510,12 @@
     <div class="file-status" id="fileStatus"></div>
     <div class="file-actions">
       <button type="button" class="btn-edit" id="exportBtn" data-i18n="data.exportBtn">ייצוא לאקסל</button>
+      <button type="button" class="btn-edit" id="shareBtn" data-i18n="settings.data.shareBtn">שיתוף</button>
       <button type="button" class="btn-edit" id="importBtn" data-i18n="data.importBtn">ייבוא מאקסל</button>
       <button type="button" class="btn-danger" id="deleteAllBtn" data-i18n="data.deleteAllBtn">מחיקת כל הנתונים</button>
     </div>
     <p class="file-hint" style="margin-top:8px" data-i18n="data.hint">הנתונים נשמרים בדפדפן הזה בלבד. מומלץ לייצא גיבוי לאקסל מדי פעם.</p>
+    <p class="file-hint" style="margin-top:4px" data-i18n-html="settings.data.shareHint">כפתור <strong>שיתוף</strong> פותח את תפריט השיתוף של המכשיר (וואטסאפ, מייל וכו') עם קובץ הגיבוי מוכן לשליחה. בדפדפנים שלא תומכים בשיתוף קבצים, הקובץ פשוט יורד — אפשר לצרף אותו ידנית.</p>
   </section>
 
   <section class="settings-section" id="settingsBackupSection" data-stab="backup" hidden>
@@ -554,6 +601,15 @@
   <div class="dialog-actions">
     <button type="button" class="btn-primary" id="copyContactConfirmBtn" data-i18n="contacts.copyBtn">העתקה</button>
     <button type="button" class="btn-ghost" id="copyContactCancelBtn" data-i18n="common.cancel">ביטול</button>
+  </div>
+</dialog>
+
+<dialog id="noProjectsDialog">
+  <h3 data-i18n="projects.noProjectsTitle">אין עדיין פרויקטים</h3>
+  <p class="file-hint" data-i18n="projects.addInProjectsHint">הוספת פרויקט חדש נעשית מטאב "פרויקטים", למעלה.</p>
+  <div class="dialog-actions">
+    <button type="button" class="btn-primary" id="openProjectsFromNoProjects" data-i18n="projects.goToProjectsBtn">מעבר לפרויקטים</button>
+    <button type="button" class="btn-ghost" id="closeNoProjects" data-i18n="common.close">סגור</button>
   </div>
 </dialog>
 
@@ -664,6 +720,16 @@ const I18N = {
   'projects.dateRangeLabel': { he: 'טווח תאריכים', en: 'Date range', ru: 'Период', ar: 'النطاق الزمني' },
   'projects.overdueTitle': { he: 'באיחור', en: 'Overdue', ru: 'Просрочено', ar: 'متأخر' },
 
+  'overview.timelineTitle': { he: 'ציר זמן', en: 'Timeline', ru: 'Хронология', ar: 'الجدول الزمني' },
+  'overview.timelineEmptyMsg': { he: 'הוסיפו תאריך התחלה ותאריך יעד לפרויקטים כדי לראות אותם על ציר הזמן.', en: 'Add a start date and target date to projects to see them on the timeline.', ru: 'Добавьте дату начала и целевую дату к проектам, чтобы увидеть их на хронологии.', ar: 'أضيفوا تاريخ بدء وتاريخاً مستهدفاً للمشاريع لرؤيتها على الجدول الزمني.' },
+
+  'projects.viewList': { he: 'רשימה', en: 'List', ru: 'Список', ar: 'قائمة' },
+  'projects.viewKanban': { he: 'Kanban', en: 'Kanban', ru: 'Канбан', ar: 'كانبان' },
+
+  'projects.noProjectsTitle': { he: 'אין עדיין פרויקטים', en: 'No projects yet', ru: 'Проектов пока нет', ar: 'لا توجد مشاريع بعد' },
+  'projects.addInProjectsHint': { he: 'הוספת פרויקט חדש נעשית מטאב "פרויקטים", למעלה.', en: 'Adding a new project is done from the "Projects" tab above.', ru: 'Добавление нового проекта выполняется на вкладке «Проекты» выше.', ar: 'تتم إضافة مشروع جديد من علامة تبويب "المشاريع" أعلاه.' },
+  'projects.goToProjectsBtn': { he: 'מעבר לפרויקטים', en: 'Go to Projects', ru: 'Перейти к проектам', ar: 'الانتقال إلى المشاريع' },
+
   'projects.addLabel': { he: 'הוספת פרויקט', en: 'Add project', ru: 'Добавить проект', ar: 'إضافة مشروع' },
   'projects.listTitle': { he: 'כל הפרויקטים', en: 'All projects', ru: 'Все проекты', ar: 'كل المشاريع' },
   'projects.emptyMsg': { he: 'אין עדיין פרויקטים. הוסיפו את הראשון למעלה.', en: 'No projects yet. Add the first one above.', ru: 'Проектов пока нет. Добавьте первый выше.', ar: 'لا توجد مشاريع بعد. أضيفوا الأول أعلاه.' },
@@ -714,6 +780,12 @@ const I18N = {
   'data.hint': { he: 'הנתונים נשמרים בדפדפן הזה בלבד. מומלץ לייצא גיבוי לאקסל מדי פעם.', en: 'Data is saved in this browser only. It\'s recommended to export a backup to Excel occasionally.', ru: 'Данные сохраняются только в этом браузере. Рекомендуется периодически экспортировать резервную копию в Excel.', ar: 'يتم حفظ البيانات في هذا المتصفح فقط. يُنصح بتصدير نسخة احتياطية إلى إكسل بين الحين والآخر.' },
   'data.fileStatus': { he: '{n} רשומות · נשמר לאחרונה: {t}', en: '{n} records · last saved: {t}', ru: 'Записей: {n} · последнее сохранение: {t}', ar: '{n} سجلات · آخر حفظ: {t}' },
   'data.fileStatusNever': { he: '{n} רשומות · טרם נשמר', en: '{n} records · never saved', ru: 'Записей: {n} · ещё не сохранено', ar: '{n} سجلات · لم يُحفظ بعد' },
+
+  'settings.data.shareBtn': { he: 'שיתוף', en: 'Share', ru: 'Поделиться', ar: 'مشاركة' },
+  'settings.data.shareHint': { he: 'כפתור <strong>שיתוף</strong> פותח את תפריט השיתוף של המכשיר (וואטסאפ, מייל וכו\') עם קובץ הגיבוי מוכן לשליחה. בדפדפנים שלא תומכים בשיתוף קבצים, הקובץ פשוט יורד — אפשר לצרף אותו ידנית.', en: 'The <strong>Share</strong> button opens the device\'s share menu (WhatsApp, email, etc.) with the backup file ready to send. On browsers that don\'t support file sharing, the file just downloads instead - you can attach it manually.', ru: 'Кнопка <strong>«Поделиться»</strong> открывает меню общего доступа устройства (WhatsApp, email и т.д.) с готовым к отправке файлом резервной копии. В браузерах, не поддерживающих обмен файлами, файл просто скачивается — его можно прикрепить вручную.', ar: 'يفتح زر <strong>المشاركة</strong> قائمة المشاركة الخاصة بالجهاز (واتساب، بريد إلكتروني، إلخ) مع ملف النسخة الاحتياطية جاهزاً للإرسال. في المتصفحات التي لا تدعم مشاركة الملفات، يتم تنزيل الملف ببساطة — يمكنكم إرفاقه يدوياً.' },
+  'settings.data.shareTitle': { he: 'גיבוי נתוני נועם', en: 'Noam data backup', ru: 'Резервная копия данных Noam', ar: 'نسخة احتياطية لبيانات نوعام' },
+  'settings.data.shareText': { he: 'קובץ הגיבוי של נועם — לפתיחה בטלפון/מחשב עם נועם פתוח, דרך "ייבוא מאקסל" בהגדרות.', en: 'Noam backup file - open it on a device with Noam via "Import from Excel" in Settings.', ru: 'Файл резервной копии Noam — откройте его на устройстве с Noam через «Импорт из Excel» в настройках.', ar: 'ملف النسخة الاحتياطية لـ Noam — افتحوه على جهاز مع نوعام عبر "استيراد من إكسل" في الإعدادات.' },
+  'settings.data.shareFallback': { he: 'הקובץ הורד — אפשר לשלוח אותו ידנית (וואטסאפ/מייל)', en: 'File downloaded - you can send it manually (WhatsApp/email)', ru: 'Файл скачан — вы можете отправить его вручную (WhatsApp/email)', ar: 'تم تنزيل الملف — يمكنكم إرساله يدوياً (واتساب/بريد إلكتروني)' },
 
   'settings.title': { he: 'הגדרות', en: 'Settings', ru: 'Настройки', ar: 'الإعدادات' },
   'settings.tabs.data': { he: 'נתונים מקומיים', en: 'Local data', ru: 'Локальные данные', ar: 'بيانات محلية' },
@@ -790,6 +862,7 @@ function t(key, vars) {
 function applyI18nDom(root) {
   const scope = root || document;
   scope.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  scope.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
   scope.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   scope.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
 }
@@ -944,6 +1017,8 @@ function renderApp() {
   renderExpensesTable();
   renderContactsTable();
   renderFileStatus();
+  updateTasksViewToggleBtn();
+  if (tasksView === 'kanban') renderTasksKanban();
 }
 
 function refreshProjectSelects() {
@@ -1018,6 +1093,63 @@ function renderOverview() {
       <td class="num">${openForProject}</td>
     </tr>`;
   }).join('');
+
+  renderOverviewTimeline(projList);
+}
+
+// Lightweight CSS Gantt: one bar per project spanning startDate-dueDate, month gridlines, a "today" marker.
+function renderOverviewTimeline(projList) {
+  const box = document.getElementById('overview-timeline');
+  const section = document.getElementById('overview-timeline-section');
+  if (!box) return;
+  // A timeline only means anything when comparing 2+ projects - filtered (or
+  // overall) down to a single project, there's nothing to place on a shared
+  // axis, so the whole section just hides instead of showing one lone,
+  // comparison-less bar.
+  if (projList.length < 2) { if (section) section.hidden = true; return; }
+  if (section) section.hidden = false;
+  // A project needs at least one of the two dates to place it on the timeline; if only one is
+  // set, use it for both ends (a single-day marker) rather than hiding the project entirely.
+  const dated = projList.filter(p => p.startDate || p.dueDate).map(p => ({ ...p, startDate: p.startDate || p.dueDate, dueDate: p.dueDate || p.startDate }));
+  if (!dated.length) { box.innerHTML = `<div class="empty">${t('overview.timelineEmptyMsg')}</div>`; return; }
+
+  const starts = dated.map(p => new Date(p.startDate).getTime());
+  const ends = dated.map(p => new Date(p.dueDate).getTime());
+  let rangeMin = Math.min(...starts), rangeMax = Math.max(...ends);
+  const pad = Math.max((rangeMax - rangeMin) * 0.04, 86400000 * 3);
+  rangeMin -= pad; rangeMax += pad;
+  const span = rangeMax - rangeMin || 1;
+
+  const months = [];
+  const d = new Date(rangeMin);
+  d.setDate(1); d.setHours(0, 0, 0, 0);
+  // Capped at 600 months (50 years): a single mistyped project date (e.g. 2260
+  // instead of 2026) would otherwise make this loop run for a very long time,
+  // freezing the tab while it builds gridlines nobody can see anyway.
+  while (d.getTime() < rangeMax && months.length < 600) { months.push(new Date(d)); d.setMonth(d.getMonth() + 1); }
+  const gridHtml = months.map(m => {
+    const pct = ((m.getTime() - rangeMin) / span) * 100;
+    return `<div class="gantt-gridline" style="inset-inline-start:${pct}%"><span>${MONTH_NAMES[currentLang][m.getMonth()].slice(0, 3)} ${String(m.getFullYear()).slice(-2)}</span></div>`;
+  }).join('');
+  const todayPct = ((Date.now() - rangeMin) / span) * 100;
+  const todayMarker = (todayPct >= 0 && todayPct <= 100) ? `<div class="gantt-today" style="inset-inline-start:${todayPct}%"></div>` : '';
+
+  const rows = [...dated].sort((a, b) => new Date(a.startDate) - new Date(b.startDate)).map(p => {
+    const s = new Date(p.startDate).getTime(), e = new Date(p.dueDate).getTime();
+    const left = ((s - rangeMin) / span) * 100;
+    const width = Math.max(((e - s) / span) * 100, 1);
+    return `<div class="gantt-row">
+      <div class="gantt-label" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+      <div class="gantt-track">
+        <div class="gantt-bar ${statusClass('status', p.status)}" style="inset-inline-start:${left}%; width:${width}%" title="${escapeHtml(p.name)}: ${fmtDate(p.startDate)} – ${fmtDate(p.dueDate)}"><span>${fmtDate(p.startDate)} – ${fmtDate(p.dueDate)}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  box.innerHTML = `<div class="gantt-wrap">
+    <div class="gantt-grid">${gridHtml}${todayMarker}</div>
+    <div class="gantt-rows">${rows}</div>
+  </div>`;
 }
 
 function renderProjectsTable() {
@@ -1061,6 +1193,59 @@ function renderTasksTable() {
       </td>
     </tr>`;
   }).join('');
+}
+
+// --- Tasks Kanban board (list/kanban toggle) ---
+let tasksView = 'list';
+const TASK_STATUS_ORDER = ['open', 'inprogress', 'done'];
+
+function updateTasksViewToggleBtn() {
+  const btn = document.getElementById('tasksViewToggleBtn');
+  if (!btn) return;
+  // The button always shows the view it would switch TO, not the current one.
+  btn.textContent = tasksView === 'list' ? t('projects.viewKanban') : t('projects.viewList');
+}
+
+function renderTasksKanban() {
+  const selectedName = currentFilterProjectName();
+  const rows = selectedName ? tasks.filter(x => x.project === selectedName) : tasks;
+  const board = document.getElementById('tasksKanbanBoard');
+  if (!board) return;
+  board.innerHTML = TASK_STATUS_ORDER.map((status, colIdx) => {
+    const colTasks = rows.filter(x => x.status === status).sort((a, b) => b.id - a.id);
+    const cards = colTasks.map(task => {
+      const overdue = isTaskOverdue(task);
+      const subs = task.subtasks || [];
+      const canLeft = colIdx > 0, canRight = colIdx < TASK_STATUS_ORDER.length - 1;
+      return `<div class="kanban-card" draggable="true" data-task-id="${task.id}">
+        <div class="kanban-card-title">${escapeHtml(task.name)}</div>
+        <div class="kanban-card-meta">
+          ${task.project ? `<span>${escapeHtml(task.project)}</span>` : ''}
+          ${task.assignee ? `<span>· ${escapeHtml(task.assignee)}</span>` : ''}
+          ${task.priority ? `<span class="type-badge ${statusClass('priority', task.priority)}">${escapeHtml(enumLabel('priority', task.priority))}</span>` : ''}
+        </div>
+        ${task.dueDate ? `<div class="kanban-card-meta${overdue ? ' kanban-card-overdue' : ''}" title="${overdue ? t('projects.overdueTitle') : ''}">${overdue ? '⚠ ' : ''}${fmtDate(task.dueDate)}</div>` : ''}
+        <div class="kanban-card-meta"><button type="button" class="btn-ghost subtasks-btn" data-open-subtasks="${task.id}">${subs.length ? `${subs.filter(s => s.done).length}/${subs.length}` : '+'} </button></div>
+        <div class="kanban-card-actions">
+          <button type="button" class="kanban-move-btn" data-move="-1" data-task-id="${task.id}" ${canLeft ? '' : 'disabled'}>‹</button>
+          <button type="button" class="btn-edit" style="padding:2px 10px;font-size:12px" data-edit-task-kanban="${task.id}">${t('common.edit')}</button>
+          <button type="button" class="kanban-move-btn" data-move="1" data-task-id="${task.id}" ${canRight ? '' : 'disabled'}>›</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="kanban-col" data-status="${status}">
+      <div class="kanban-col-head"><span>${escapeHtml(enumLabel('taskStatus', status))}</span><span class="kanban-col-count">${colTasks.length}</span></div>
+      <div class="kanban-cards" data-status="${status}">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+function moveTaskStatus(taskId, newStatus) {
+  const task = tasks.find(x => String(x.id) === String(taskId));
+  if (!task) return;
+  task.status = newStatus;
+  persist();
+  renderApp();
 }
 
 function renderExpensesTable() {
@@ -1246,7 +1431,7 @@ const SHEET_MATCH = {
   expenses: /הוצא|expense|расход|مصروف/i,
   contacts: /קשר|contact|контакт|اتصال|جهة/i
 };
-function exportXlsx() {
+function buildWorkbook() {
   const wb = XLSX.utils.book_new();
 
   const projHeader = ['id', t('field.name'), t('field.description'), t('field.status'), t('field.startDate'), t('field.dueDate'), t('field.budget')];
@@ -1265,9 +1450,15 @@ function exportXlsx() {
   const contRows = contacts.map(x => [x.id, x.name, x.role, x.project, x.phone, x.notes]);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([contHeader, ...contRows]), t('nav.tabContacts'));
 
-  XLSX.writeFile(wb, 'noam.xlsx');
+  return wb;
+}
+function exportXlsx() {
+  XLSX.writeFile(buildWorkbook(), 'noam.xlsx');
   recordBackupNow();
   toast(t('toast.exported'));
+}
+function buildXlsxBlob() {
+  return new Blob([XLSX.write(buildWorkbook(), { type: 'array', bookType: 'xlsx' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
 function sheetRows(wb, kind) {
   const name = wb.SheetNames.find(n => SHEET_MATCH[kind].test(n));
@@ -1586,6 +1777,16 @@ function init() {
 
   renderApp();
 
+  // Nudge toward the Projects tab when there are no projects yet - shown once on load.
+  const noProjDialog = document.getElementById('noProjectsDialog');
+  if (!projects.length && !noProjDialog.open) noProjDialog.showModal();
+  document.getElementById('closeNoProjects').addEventListener('click', () => noProjDialog.close());
+  document.getElementById('openProjectsFromNoProjects').addEventListener('click', () => {
+    noProjDialog.close();
+    document.querySelector('#mainTabs [data-tab="projects"]').click();
+    document.querySelector('#projectForm [data-f="name"]').focus();
+  });
+
   // Tabs
   const tabs = document.getElementById('mainTabs');
   tabs.addEventListener('click', ev => {
@@ -1593,6 +1794,7 @@ function init() {
     if (!btn) return;
     tabs.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.dataset.panel !== btn.dataset.tab; });
+    document.getElementById('tasksViewToggleBtn').hidden = btn.dataset.tab !== 'tasks';
   });
 
   // Project switcher
@@ -1624,6 +1826,57 @@ function init() {
     if (editId) loadRecordIntoForm('taskForm', tasks.find(x => String(x.id) === editId));
     if (delId) { if (!confirm(t('confirm.deleteTask'))) return; deleteTask(delId); toast(t('toast.deleted')); renderApp(); }
     if (subId) openSubtasksDialog(subId);
+  });
+
+  // Tasks list/Kanban view toggle
+  document.getElementById('tasksViewToggleBtn').addEventListener('click', () => {
+    tasksView = tasksView === 'list' ? 'kanban' : 'list';
+    updateTasksViewToggleBtn();
+    document.getElementById('tasksListWrap').hidden = tasksView !== 'list';
+    document.getElementById('tasksKanbanWrap').hidden = tasksView !== 'kanban';
+    if (tasksView === 'kanban') renderTasksKanban();
+  });
+
+  // Kanban board: move buttons, edit, subtasks, drag-and-drop
+  let taskDragId = null;
+  const kanbanBoard = document.getElementById('tasksKanbanBoard');
+  kanbanBoard.addEventListener('click', ev => {
+    const moveBtn = ev.target.closest('[data-move]');
+    const editBtn = ev.target.closest('[data-edit-task-kanban]');
+    const subBtn = ev.target.closest('[data-open-subtasks]');
+    if (moveBtn) {
+      const task = tasks.find(x => String(x.id) === moveBtn.dataset.taskId);
+      if (!task) return;
+      const idx = TASK_STATUS_ORDER.indexOf(task.status) + Number(moveBtn.dataset.move);
+      if (idx < 0 || idx >= TASK_STATUS_ORDER.length) return;
+      moveTaskStatus(task.id, TASK_STATUS_ORDER[idx]);
+    } else if (editBtn) {
+      loadRecordIntoForm('taskForm', tasks.find(x => String(x.id) === editBtn.dataset.editTaskKanban));
+    } else if (subBtn) {
+      openSubtasksDialog(subBtn.dataset.openSubtasks);
+    }
+  });
+  kanbanBoard.addEventListener('dragstart', ev => {
+    const card = ev.target.closest('.kanban-card');
+    if (!card) return;
+    taskDragId = card.dataset.taskId;
+    card.classList.add('dragging');
+  });
+  kanbanBoard.addEventListener('dragend', ev => { ev.target.closest('.kanban-card')?.classList.remove('dragging'); });
+  kanbanBoard.addEventListener('dragover', ev => {
+    const col = ev.target.closest('.kanban-col');
+    if (!col) return;
+    ev.preventDefault();
+    col.classList.add('drag-over');
+  });
+  kanbanBoard.addEventListener('dragleave', ev => { ev.target.closest('.kanban-col')?.classList.remove('drag-over'); });
+  kanbanBoard.addEventListener('drop', ev => {
+    const col = ev.target.closest('.kanban-col');
+    if (!col || !taskDragId) return;
+    ev.preventDefault();
+    col.classList.remove('drag-over');
+    moveTaskStatus(taskDragId, col.dataset.status);
+    taskDragId = null;
   });
   document.getElementById('expensesBody').addEventListener('click', ev => {
     const editId = ev.target.dataset.editExpense, delId = ev.target.dataset.delExpense;
@@ -1710,6 +1963,30 @@ function init() {
     setTimeout(() => { location.href = location.pathname + '?_=' + Date.now(); }, 600);
   });
   document.getElementById('exportBtn').addEventListener('click', exportXlsx);
+  // "Send to spouse": builds the identical backup file exportBtn downloads, but
+  // hands it to the OS share sheet (WhatsApp/email/etc.) via the Web Share API
+  // instead of just saving it - one tap instead of download-then-attach. Falls
+  // back to a plain download on browsers that can't share files (desktop
+  // Firefox, older browsers), same as exportBtn, since the file is otherwise
+  // identical either way.
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    try {
+      const file = new File([buildXlsxBlob()], 'noam.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: t('settings.data.shareTitle'), text: t('settings.data.shareText') });
+          recordBackupNow();
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return; // user closed the share sheet - not an error
+          throw e;
+        }
+      }
+      exportXlsx();
+      toast(t('settings.data.shareFallback'));
+      recordBackupNow();
+    } catch (err) { toast(err.message, true); }
+  });
   const fileInput = document.getElementById('fileInput');
   document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', ev => {
@@ -1754,7 +2031,7 @@ function init() {
     settingsDialog.showModal();
   });
 
-  [settingsDialog, helpDialog, backupReminderDialog, subtasksDialog, document.getElementById('copyContactDialog'), document.getElementById('reportDialog')].forEach(wireBackdropClose);
+  [settingsDialog, helpDialog, backupReminderDialog, subtasksDialog, document.getElementById('copyContactDialog'), document.getElementById('reportDialog'), noProjDialog].forEach(wireBackdropClose);
 }
 init();
 </script>
