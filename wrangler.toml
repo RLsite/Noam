@@ -6,3 +6,5 @@ compatibility_date = "2026-07-13"
 # instead of trying to run a Worker script that doesn't exist.
 [assets]
 directory = "./"
+
+# deploy connectivity test - safe to remove later
