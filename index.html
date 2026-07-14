@@ -744,7 +744,7 @@
   }
   /* Auto-popping backup reminder opens NON-modally (show(), not showModal) so its
      backdrop never sits over the tabs and swallows clicks. Pin it fixed-centered. */
-  #backupReminderDialog[open] { position: fixed; inset: 0; margin: auto; z-index: 50; }
+  #noProjectsDialog[open], #backupReminderDialog[open] { position: fixed; inset: 0; margin: auto; z-index: 50; }
   .daterange-dialog { max-width: 340px; }
   .date-range-picker { display: flex; align-items: center; gap: 6px; }
   .date-range-field {
@@ -9297,10 +9297,11 @@ async function loadProjects() {
   toolData.projlist = pl; toolData.projtasks = pt; toolData.projexp = pe; toolData.projcontacts = pc;
   renderProjects();
   const noProjDialog = document.getElementById('noProjectsDialog');
-  if (!pl.length && !noProjDialog.open) noProjDialog.showModal();
+  if (!pl.length && !noProjDialog.open && !noProjDialog.dataset.dismissed) noProjDialog.show();
 }
-document.getElementById('closeNoProjects').addEventListener('click', () => document.getElementById('noProjectsDialog').close());
+document.getElementById('closeNoProjects').addEventListener('click', () => { const d=document.getElementById('noProjectsDialog'); d.dataset.dismissed='1'; d.close(); });
 document.getElementById('openSettingsFromNoProjects').addEventListener('click', () => {
+  document.getElementById('noProjectsDialog').dataset.dismissed='1';
   document.getElementById('noProjectsDialog').close();
   document.getElementById('settingsBtn').click();
   showSettingsTab('tool');
